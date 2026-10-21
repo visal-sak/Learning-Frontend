@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
+import { WiDirectionLeft } from "react-icons/wi"
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, CheckCircle2, Circle, Loader2, ListVideo, X, Paperclip, Download, Trophy, ListChecks } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, CheckCircle2, Circle, Loader2, ListVideo, X, Paperclip, Download, Trophy, ListChecks } from "lucide-react"
 import { TiLockClosed } from "react-icons/ti"
 import { IoIosPlayCircle } from "react-icons/io"
 import { HiCheckCircle } from "react-icons/hi"
@@ -113,7 +114,7 @@ function Player({ course, lessons, lessonId, completed, setDone, onEnrolled }) {
           <div className="mx-auto flex max-w-[var(--lesson-w)] items-center gap-3 px-4 pt-4 sm:px-6">
             <Button variant="outline" size="sm" asChild>
               <Link to={`/courses/${course.id}`}>
-                <ArrowLeft />
+                <WiDirectionLeft className="size-5" />
                 <span className="sm:hidden">Back</span>
                 <span className="hidden sm:inline">Back to course</span>
               </Link>

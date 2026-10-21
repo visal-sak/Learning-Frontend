@@ -1,6 +1,9 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Plus, Pencil, Send, Trash2, Eye, Loader2, Globe, Archive, Users } from "lucide-react"
+import { Plus, Send, Loader2, Globe } from "lucide-react"
+import { BiSolidArchive, BiSolidEditAlt, BiSolidTrash } from "react-icons/bi"
+import { HiUsers } from "react-icons/hi"
+import { IoEye } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/admin/AdminUI"
 import { CourseThumb, EmptyState, ErrorState, LoadingState, StatusBadge } from "@/components/course/CourseBits"
@@ -12,6 +15,7 @@ import { getErrorMessage } from "@/lib/api"
 import { COURSE_STATUS, levelLabel } from "@/lib/constants"
 import { formatMinutes } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import { LEVEL_TAG, categoryTag } from "@/lib/tags"
 import { confirm } from "@/store/confirm.store"
 import { toast } from "@/lib/toast"
 
@@ -60,18 +64,25 @@ export default function CoursesPage() {
         </Button>
       </PageHeader>
 
-      <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg bg-muted p-[3px] sm:w-fit">
+      <div className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-neutral-200/80 bg-neutral-100/70 p-1 sm:w-fit dark:border-neutral-800 dark:bg-neutral-900">
         {["ALL", ...Object.keys(COURSE_STATUS)].map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
             className={cn(
-              "shrink-0 rounded-md px-3 py-1 text-sm font-medium text-muted-foreground transition-colors",
-              filter === s && "bg-background text-foreground shadow-sm"
+              "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+              filter === s && "bg-white text-foreground shadow-sm dark:bg-neutral-800"
             )}
           >
             {s === "ALL" ? "All" : COURSE_STATUS[s].label}
-            <span className="ml-1.5 text-xs opacity-60">{s === "ALL" ? all.length : counts[s] ?? 0}</span>
+            <span
+              className={cn(
+                "rounded-full px-1.5 text-[11px] font-semibold tabular-nums",
+                filter === s ? "bg-primary text-primary-foreground" : "bg-neutral-200 text-muted-foreground dark:bg-neutral-800"
+              )}
+            >
+              {s === "ALL" ? all.length : counts[s] ?? 0}
+            </span>
           </button>
         ))}
       </div>
@@ -87,58 +98,137 @@ export default function CoursesPage() {
           {!all.length && <Link to="/admin/courses/new" className="text-primary hover:underline">Create your first course</Link>}
         </EmptyState>
       ) : (
-        <div className="mt-4 divide-y rounded-xl border glass">
-          {courses.map((c) => {
-            const busy = busyId === c.id
-            return (
-              <div key={c.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-                <Link to={`/admin/courses/${c.id}`} className="shrink-0">
-                  <CourseThumb course={c} className="w-full rounded-md sm:w-32" iconClassName="size-6" />
-                </Link>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link to={`/admin/courses/${c.id}`} className="truncate font-medium hover:underline">{c.title}</Link>
-                    <StatusBadge status={c.status} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {[c.categoryName, levelLabel(c.level), `${c.lessonCount ?? 0} lessons`, formatMinutes(c.totalMinutes)].filter(Boolean).join(" · ")}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {busy && <Loader2 className="m-2 size-4 animate-spin text-muted-foreground" />}
-                  {!isAdmin && (c.status === "DRAFT" || c.status === "REJECTED") && (
-                    <Button size="sm" variant="secondary" disabled={busy} onClick={() => setStatus(c, "PENDING_REVIEW", "Ready for review")}>
-                      <Send /> Submit for review
-                    </Button>
-                  )}
-                  {isAdmin && c.status !== "PUBLISHED" && (
-                    <Button size="sm" variant="secondary" disabled={busy} onClick={() => setStatus(c, "PUBLISHED", "Published by admin")}>
-                      <Globe /> Publish
-                    </Button>
-                  )}
-                  {c.status === "PUBLISHED" && (
-                    <Button size="icon" variant="ghost" disabled={busy} onClick={() => setStatus(c, "ARCHIVED", "Archived")} aria-label="Archive" title="Archive">
-                      <Archive />
-                    </Button>
-                  )}
-                  <Button size="icon" variant="ghost" asChild aria-label="Students" title="Students">
-                    <Link to={`/admin/courses/${c.id}/students`}><Users /></Link>
-                  </Button>
-                  <Button size="icon" variant="ghost" asChild aria-label="View" title="View on site">
-                    <Link to={`/courses/${c.id}`}><Eye /></Link>
-                  </Button>
-                  <Button size="icon" variant="ghost" asChild aria-label="Edit" title="Edit">
-                    <Link to={`/admin/courses/${c.id}`}><Pencil /></Link>
-                  </Button>
-                  <Button size="icon" variant="ghost" disabled={busy} onClick={() => onDelete(c)} aria-label="Delete" title="Delete" className="text-destructive hover:text-destructive">
-                    <Trash2 />
-                  </Button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <CourseTable
+          courses={courses}
+          isAdmin={isAdmin}
+          busyId={busyId}
+          onStatus={setStatus}
+          onDelete={onDelete}
+        />
       )}
     </>
+  )
+}
+
+// White table (desktop) / stacked cards (phones), same look as the other admin tables
+function CourseTable({ courses, isAdmin, busyId, onStatus, onDelete }) {
+  const th = "px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+  return (
+    <div className="overflow-hidden rounded-xl border border-neutral-200/80 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+      {/* desktop */}
+      <table className="hidden w-full text-sm md:table">
+        <thead className="border-b border-neutral-200/80 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800/40">
+          <tr>
+            <th className={th}>Course</th>
+            <th className={th}>Category</th>
+            <th className={th}>Level</th>
+            <th className={th}>Status</th>
+            <th className={cn(th, "text-right")}>Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-neutral-200/80 dark:divide-neutral-800">
+          {courses.map((c) => (
+            <tr key={c.id} className="transition-colors hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
+              <td className="px-4 py-3">
+                <CourseCell course={c} />
+              </td>
+              <td className="px-4 py-3">
+                {c.categoryName ? <Tag className={categoryTag(c.categoryName)}>{c.categoryName}</Tag> : <span className="text-muted-foreground">—</span>}
+              </td>
+              <td className="px-4 py-3">
+                {c.level ? <Tag className={LEVEL_TAG[c.level]}>{levelLabel(c.level)}</Tag> : <span className="text-muted-foreground">—</span>}
+              </td>
+              <td className="px-4 py-3">
+                <StatusBadge status={c.status} />
+              </td>
+              <td className="w-px whitespace-nowrap px-4 py-3">
+                <RowActions course={c} isAdmin={isAdmin} busy={busyId === c.id} onStatus={onStatus} onDelete={onDelete} className="flex-nowrap" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* phones */}
+      <ul className="divide-y divide-neutral-200/80 md:hidden dark:divide-neutral-800">
+        {courses.map((c) => (
+          <li key={c.id} className="space-y-3 p-4">
+            <CourseCell course={c} />
+            <div className="flex flex-wrap items-center gap-1.5">
+              <StatusBadge status={c.status} />
+              {c.categoryName && <Tag className={categoryTag(c.categoryName)}>{c.categoryName}</Tag>}
+              {c.level && <Tag className={LEVEL_TAG[c.level]}>{levelLabel(c.level)}</Tag>}
+            </div>
+            <RowActions course={c} isAdmin={isAdmin} busy={busyId === c.id} onStatus={onStatus} onDelete={onDelete} className="justify-start" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function Tag({ className, children }) {
+  return <span className={cn("inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold", className)}>{children}</span>
+}
+
+// Thumbnail on a #f5f5f5 panel + title + lessons/duration
+function CourseCell({ course: c }) {
+  return (
+    <Link to={`/admin/courses/${c.id}`} className="group flex min-w-0 items-center gap-3">
+      <span className="block w-24 shrink-0 overflow-hidden rounded-lg bg-[#f5f5f5] dark:bg-neutral-800">
+        <CourseThumb course={c} className="aspect-[16/10] object-contain p-1.5 mix-blend-multiply dark:mix-blend-normal" iconClassName="size-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate font-semibold group-hover:text-primary group-hover:underline">{c.title}</span>
+        <span className="block text-xs text-muted-foreground">
+          {c.lessonCount ?? 0} lesson{c.lessonCount === 1 ? "" : "s"} · {formatMinutes(c.totalMinutes)}
+        </span>
+      </span>
+    </Link>
+  )
+}
+
+const iconBtn = "size-8"
+
+function RowActions({ course: c, isAdmin, busy, onStatus, onDelete, className }) {
+  return (
+    <div className={cn("flex flex-wrap items-center justify-end gap-1.5", className)}>
+      {busy && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+      {!isAdmin && (c.status === "DRAFT" || c.status === "REJECTED") && (
+        <Button size="sm" variant="bordered" disabled={busy} onClick={() => onStatus(c, "PENDING_REVIEW", "Ready for review")}>
+          <Send /> Submit for review
+        </Button>
+      )}
+      {isAdmin && c.status !== "PUBLISHED" && (
+        <Button size="sm" variant="bordered" disabled={busy} onClick={() => onStatus(c, "PUBLISHED", "Published by admin")}>
+          <Globe /> Publish
+        </Button>
+      )}
+      {c.status === "PUBLISHED" && (
+        <Button size="icon" variant="bordered" className={iconBtn} disabled={busy} onClick={() => onStatus(c, "ARCHIVED", "Archived")} aria-label="Archive" title="Archive">
+          <BiSolidArchive className="size-4" />
+        </Button>
+      )}
+      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label="Students" title="Students">
+        <Link to={`/admin/courses/${c.id}/students`}><HiUsers className="size-4" /></Link>
+      </Button>
+      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label="View" title="View on site">
+        <Link to={`/courses/${c.id}`}><IoEye className="size-4" /></Link>
+      </Button>
+      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label="Edit" title="Edit">
+        <Link to={`/admin/courses/${c.id}`}><BiSolidEditAlt className="size-4" /></Link>
+      </Button>
+      <Button
+        size="icon"
+        variant="bordered"
+        className={cn(iconBtn, "text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10")}
+        disabled={busy}
+        onClick={() => onDelete(c)}
+        aria-label="Delete"
+        title="Delete"
+      >
+        <BiSolidTrash className="size-4" />
+      </Button>
+    </div>
   )
 }

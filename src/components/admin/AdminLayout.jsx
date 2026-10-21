@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
+import { WiDirectionLeft } from "react-icons/wi"
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useShallow } from "zustand/react/shallow"
 import {
-  GraduationCap, Menu, X, LogOut, ArrowLeft, Moon, Sun,
+  GraduationCap, Menu, X, LogOut, Moon, Sun,
 } from "lucide-react"
 import { TbApps, TbLibraryPhoto, TbClipboardCheck } from "react-icons/tb"
 import { BiBookOpen } from "react-icons/bi"
@@ -62,7 +63,7 @@ function BrandMark() {
   const { isAdmin } = useRoles()
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <div className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-foreground text-background">
+      <div className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-primary text-primary-foreground">
         <GraduationCap className="size-4" />
       </div>
       {!collapsed && (
@@ -141,7 +142,7 @@ function AdminSidebar({ variant, collapsed, onCollapsedChange, onNavigate, width
           </SidebarSection>
         ))}
         <SidebarSection>
-          <SidebarItem to="/" icon={<ArrowLeft className="size-[18px]" strokeWidth={1.75} />} onClick={onNavigate}>Back to site</SidebarItem>
+          <SidebarItem to="/" icon={<WiDirectionLeft className="size-[22px]" />} onClick={onNavigate}>Back to site</SidebarItem>
         </SidebarSection>
       </SidebarNav>
       <SidebarFooter>

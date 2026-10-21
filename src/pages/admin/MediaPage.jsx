@@ -1,7 +1,10 @@
 import { useRef, useState } from "react"
-import { Upload, Trash2, Copy, Check, Loader2, FileVideo, FileText, FileArchive, EyeOff } from "lucide-react"
+import { Upload, Copy, Check, Loader2, FileVideo, FileText, FileArchive } from "lucide-react"
+import { BiSolidTrash } from "react-icons/bi"
+import { IoEyeOff } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/admin/AdminUI"
+import { DataTable, Tag } from "@/components/admin/DataTable"
 import { EmptyState, ErrorState, LoadingState } from "@/components/course/CourseBits"
 import { FormError } from "@/components/auth/FormField"
 import { useFetch } from "@/hooks/useFetch"
@@ -10,9 +13,18 @@ import { toList } from "@/services/http"
 import { getErrorMessage } from "@/lib/api"
 import { confirm } from "@/store/confirm.store"
 import { toast } from "@/lib/toast"
+import { cn } from "@/lib/utils"
 
 const isImage = (m) => /^image\//.test(m.mediaType ?? "") || /^(png|jpe?g|gif|webp|svg|avif)$/i.test(m.extension ?? "")
 const isVideo = (m) => /^video\//.test(m.mediaType ?? "") || /^(mp4|webm|mov|mkv)$/i.test(m.extension ?? "")
+const isDoc = (m) => /pdf|doc|txt|ppt|xls/i.test(m.extension ?? "")
+
+// Type tag colour by kind of file
+const kindTag = (m) =>
+  isImage(m) ? "bg-sky-500/12 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
+    : isVideo(m) ? "bg-violet-500/12 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300"
+      : isDoc(m) ? "bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
+        : "bg-neutral-500/12 text-neutral-700 dark:bg-neutral-500/20 dark:text-neutral-300"
 
 export default function MediaPage() {
   const [page, setPage] = useState(0)
@@ -85,80 +97,93 @@ export default function MediaPage() {
         <EmptyState title="No media yet">Upload thumbnails, lesson videos or attachments.</EmptyState>
       ) : (
         <>
-          <div className="mt-4 overflow-x-auto rounded-xl border bg-card">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead className="border-b text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">File</th>
-                  <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Size</th>
-                  <th className="px-4 py-3 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {items.map((m) => (
-                  <tr key={m.id ?? m.name} className="transition-colors hover:bg-muted/40">
-                    <td className="px-4 py-2.5">
-                      <a href={m.uri} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-3 hover:text-primary">
-                        <span className="grid h-10 w-16 shrink-0 place-items-center overflow-hidden rounded-md border bg-muted/50">
-                          {isImage(m) ? (
-                            <img src={m.uri} alt="" loading="lazy" className="size-full object-cover" />
-                          ) : isVideo(m) ? (
-                            <FileVideo className="size-4 text-muted-foreground" />
-                          ) : /pdf|doc|txt/i.test(m.extension ?? "") ? (
-                            <FileText className="size-4 text-muted-foreground" />
-                          ) : (
-                            <FileArchive className="size-4 text-muted-foreground" />
-                          )}
-                        </span>
-                        <span className="max-w-[320px] truncate font-medium" title={m.name}>{m.name}</span>
-                      </a>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium uppercase text-muted-foreground">{m.extension ?? "—"}</span>
-                    </td>
-                    <td className="px-4 py-2.5 tabular-nums text-muted-foreground">
-                      {m.size != null ? `${Number(m.size).toFixed(1)} ${m.measurement ?? ""}` : "—"}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button size="sm" variant="outline" onClick={() => copy(m)}>
-                          {copied === m.name ? <Check /> : <Copy />} {copied === m.name ? "Copied" : "Copy URL"}
-                        </Button>
-                        <Button size="icon" variant="ghost" title="Mark as draft" aria-label="Mark as draft" disabled={busy === m.name} onClick={() => act(m, () => mediaService.markDraft(m.name), "Marked as draft")}>
-                          <EyeOff />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          title="Delete"
-                          aria-label="Delete"
-                          disabled={busy === m.name}
-                          onClick={async () => {
-                            const ok = await confirm({
-                              title: "Delete this file?",
-                              description: m.name,
-                              body: "Anything that uses this file’s URL (thumbnails, lesson videos) will stop showing it.",
-                              confirmLabel: "Delete file",
-                            })
-                            if (ok) act(m, () => mediaService.remove(m.name), "File deleted")
-                          }}
-                        >
-                          {busy === m.name ? <Loader2 className="animate-spin" /> : <Trash2 />}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            className="mt-4"
+            rows={items}
+            rowKey={(m) => m.id ?? m.name}
+            columns={[
+              {
+                key: "file",
+                label: "File",
+                render: (m) => (
+                  <a href={m.uri} target="_blank" rel="noreferrer" className="group flex min-w-0 items-center gap-3">
+                    <span className="grid h-10 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-[#f5f5f5] dark:bg-neutral-800">
+                      {isImage(m) ? (
+                        <img src={m.uri} alt="" loading="lazy" className="size-full object-contain p-1 mix-blend-multiply dark:mix-blend-normal" />
+                      ) : isVideo(m) ? (
+                        <FileVideo className="size-5 text-violet-500" />
+                      ) : isDoc(m) ? (
+                        <FileText className="size-5 text-amber-500" />
+                      ) : (
+                        <FileArchive className="size-5 text-muted-foreground" />
+                      )}
+                    </span>
+                    <span className="max-w-[340px] truncate font-medium group-hover:text-primary group-hover:underline" title={m.name}>{m.name}</span>
+                  </a>
+                ),
+              },
+              {
+                key: "type",
+                label: "Type",
+                render: (m) => <Tag className={cn("uppercase", kindTag(m))}>{m.extension ?? "file"}</Tag>,
+              },
+              {
+                key: "size",
+                label: "Size",
+                nowrap: true,
+                render: (m) => (
+                  <span className="tabular-nums text-muted-foreground">{m.size != null ? `${Number(m.size).toFixed(1)} ${m.measurement ?? ""}` : "—"}</span>
+                ),
+              },
+              {
+                key: "actions",
+                label: "Actions",
+                align: "right",
+                render: (m) => (
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Button size="sm" variant="bordered" onClick={() => copy(m)}>
+                      {copied === m.name ? <Check /> : <Copy />} {copied === m.name ? "Copied" : "Copy URL"}
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="bordered"
+                      className="size-8"
+                      title="Mark as draft"
+                      aria-label="Mark as draft"
+                      disabled={busy === m.name}
+                      onClick={() => act(m, () => mediaService.markDraft(m.name), "Marked as draft")}
+                    >
+                      <IoEyeOff className="size-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="bordered"
+                      className="size-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10"
+                      title="Delete"
+                      aria-label="Delete"
+                      disabled={busy === m.name}
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: "Delete this file?",
+                          description: m.name,
+                          body: "Anything that uses this file’s URL (thumbnails, lesson videos) will stop showing it.",
+                          confirmLabel: "Delete file",
+                        })
+                        if (ok) act(m, () => mediaService.remove(m.name), "File deleted")
+                      }}
+                    >
+                      {busy === m.name ? <Loader2 className="animate-spin" /> : <BiSolidTrash className="size-4" />}
+                    </Button>
+                  </div>
+                ),
+              },
+            ]}
+          />
           {data?.totalPages > 1 && (
             <div className="mt-6 flex items-center justify-center gap-3">
-              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
+              <Button variant="bordered" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
               <span className="text-sm text-muted-foreground">Page {page + 1} of {data.totalPages}</span>
-              <Button variant="outline" size="sm" disabled={data.last} onClick={() => setPage((p) => p + 1)}>Next</Button>
+              <Button variant="bordered" size="sm" disabled={data.last} onClick={() => setPage((p) => p + 1)}>Next</Button>
             </div>
           )}
         </>

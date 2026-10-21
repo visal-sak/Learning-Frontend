@@ -3,50 +3,19 @@ import { useShallow } from "zustand/react/shallow"
 import { PenSquare, Users, BookOpen, FilePen, ClipboardCheck, GraduationCap, FileText, ListChecks, Star, UserCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PageHeader, Stars } from "@/components/admin/AdminUI"
-import { BeamTable } from "@/components/admin/BeamTable"
+import { DataTable, Tag } from "@/components/admin/DataTable"
+import { categoryTag } from "@/lib/tags"
+import { HiUsers } from "react-icons/hi"
 import { CourseThumb, EmptyState, ErrorState, LoadingState } from "@/components/course/CourseBits"
 import { useFetch } from "@/hooks/useFetch"
 import { useRoles } from "@/hooks/useRoles"
 import { useAuthStore, selectDisplayUser } from "@/store"
 import { reportService } from "@/services/report.service"
-import { cn } from "@/lib/utils"
+import { StatCard } from "@/components/StatCard"
 
 const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString())
 const fmtRating = (n) => (n ? Number(n).toFixed(1) : "—")
 const pct = (part, whole) => (whole ? `${Math.round((part / whole) * 100)}% of total` : null)
-
-// Stat card in the review-card style: icon "avatar" + name/subtitle header, big value, detail line
-const tones = {
-  green: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  sky: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
-  violet: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-  amber: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  pink: "bg-pink-500/15 text-pink-600 dark:text-pink-400",
-  yellow: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400",
-  gray: "bg-muted text-muted-foreground",
-}
-
-function StatCard({ icon: Icon, label, subtitle, value, detail, detailTone = "muted", tone = "gray" }) {
-  return (
-    <article className="glass flex flex-col gap-3 rounded-2xl p-5 text-card-foreground">
-      <header className="flex items-center gap-3">
-        <span className={cn("grid size-10 shrink-0 place-items-center rounded-full", tones[tone])}>
-          <Icon className="size-[18px]" />
-        </span>
-        <div className="min-w-0 leading-tight">
-          <p className="truncate text-[15px] font-bold">{label}</p>
-          {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
-        </div>
-      </header>
-      <p className="text-3xl font-semibold tabular-nums tracking-tight">{value ?? "—"}</p>
-      {detail && (
-        <p className={cn("text-xs", detailTone === "down" ? "text-red-500" : detailTone === "up" ? "text-emerald-500" : "text-muted-foreground")}>
-          {detail}
-        </p>
-      )}
-    </article>
-  )
-}
 
 function StatGrid({ children }) {
   return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{children}</div>
@@ -93,15 +62,45 @@ function TeachingStats() {
   )
 }
 
+// Rank tile + course thumbnail (on #f5f5f5) + title
 const courseColumn = {
   key: "title",
   label: "Course",
-  render: (c) => (
-    <Link to={`/courses/${c.courseId}`} className="flex min-w-0 items-center gap-3 hover:text-primary">
-      <CourseThumb course={{ id: c.courseId, thumbnailUrl: c.thumbnailUrl, title: c.title }} className="w-10 shrink-0 rounded" iconClassName="size-3" />
-      <span className="truncate font-medium">{c.title}</span>
+  render: (c, i) => (
+    <Link to={`/courses/${c.courseId}`} className="group flex min-w-0 items-center gap-3">
+      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs font-bold text-primary">{i + 1}</span>
+      <span className="block w-14 shrink-0 overflow-hidden rounded-md bg-[#f5f5f5] dark:bg-neutral-800">
+        <CourseThumb
+          course={{ id: c.courseId, thumbnailUrl: c.thumbnailUrl, title: c.title }}
+          className="aspect-[16/10] object-contain p-1 mix-blend-multiply dark:mix-blend-normal"
+          iconClassName="size-4"
+        />
+      </span>
+      <span className="truncate font-semibold group-hover:text-primary group-hover:underline">{c.title}</span>
     </Link>
   ),
+}
+
+const initialsOf = (name = "") => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?"
+
+const instructorColumn = {
+  key: "instructorName",
+  label: "Instructor",
+  render: (c) =>
+    c.instructorName ? (
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-neutral-100 text-[10px] font-semibold text-muted-foreground dark:bg-neutral-800">
+          {initialsOf(c.instructorName)}
+        </span>
+        <span className="truncate">{c.instructorName}</span>
+      </span>
+    ) : null,
+}
+
+const categoryColumn = {
+  key: "categoryName",
+  label: "Category",
+  render: (c) => (c.categoryName ? <Tag className={categoryTag(c.categoryName)}>{c.categoryName}</Tag> : null),
 }
 
 function TopTable({ title, description, load, columns }) {
@@ -109,7 +108,7 @@ function TopTable({ title, description, load, columns }) {
   return (
     <section className="space-y-3">
       <div>
-        <h2 className="text-sm font-semibold">{title}</h2>
+        <h2 className="text-base font-bold tracking-tight">{title}</h2>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
       {loading ? (
@@ -119,7 +118,7 @@ function TopTable({ title, description, load, columns }) {
       ) : !data?.length ? (
         <EmptyState title="No data yet" className="py-8" />
       ) : (
-        <BeamTable columns={columns} rows={data} rowKey={(c) => c.courseId} />
+        <DataTable columns={columns} rows={data} rowKey={(c) => c.courseId} />
       )}
     </section>
   )
@@ -137,13 +136,13 @@ export default function OverviewPage() {
 
       {isAdmin && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold">Platform</h2>
+          <h2 className="text-base font-bold tracking-tight">Platform</h2>
           <PlatformStats />
         </section>
       )}
       {(isInstructor || !isAdmin) && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold">My teaching</h2>
+          <h2 className="text-base font-bold tracking-tight">My teaching</h2>
           <TeachingStats />
         </section>
       )}
@@ -154,9 +153,19 @@ export default function OverviewPage() {
         load={() => reportService.topCourses(5)}
         columns={[
           courseColumn,
-          { key: "instructorName", label: "Instructor" },
-          { key: "categoryName", label: "Category" },
-          { key: "enrollmentCount", label: "Students", align: "right", render: (c) => <span className="tabular-nums">{fmt(c.enrollmentCount)}</span> },
+          instructorColumn,
+          categoryColumn,
+          {
+            key: "enrollmentCount",
+            label: "Students",
+            align: "right",
+            nowrap: true,
+            render: (c) => (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/12 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
+                <HiUsers className="size-3.5" /> {fmt(c.enrollmentCount)}
+              </span>
+            ),
+          },
         ]}
       />
       <TopTable
@@ -165,7 +174,7 @@ export default function OverviewPage() {
         load={() => reportService.topRated(5)}
         columns={[
           courseColumn,
-          { key: "instructorName", label: "Instructor" },
+          instructorColumn,
           {
             key: "averageRating",
             label: "Rating",

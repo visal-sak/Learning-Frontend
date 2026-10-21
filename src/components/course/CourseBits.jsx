@@ -29,7 +29,12 @@ export function CourseThumb({ course, className, iconClassName }) {
 
 export function StatusBadge({ status }) {
   const s = COURSE_STATUS[status] ?? { label: status, className: "bg-secondary text-secondary-foreground" }
-  return <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium", s.className)}>{s.label}</span>
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold", s.className)}>
+      {s.dot && <span className={cn("size-1.5 rounded-full", s.dot)} />}
+      {s.label}
+    </span>
+  )
 }
 
 

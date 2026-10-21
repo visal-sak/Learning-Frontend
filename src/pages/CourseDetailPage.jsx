@@ -1,12 +1,14 @@
 import { useState } from "react"
+import { WiDirectionLeft } from "react-icons/wi"
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom"
 import { TiLockClosed } from "react-icons/ti"
 import { IoIosPlayCircle } from "react-icons/io"
 import { HiCheckCircle } from "react-icons/hi"
 import { IoBook } from "react-icons/io5"
-import { MdAccessTimeFilled } from "react-icons/md"
+import { MdAccessTimeFilled, MdQuiz } from "react-icons/md"
+import { FaChartBar } from "react-icons/fa"
 import { BiSolidEditAlt } from "react-icons/bi"
-import { ArrowLeft, Loader2, BarChart3, ListChecks, ChevronDown } from "lucide-react"
+import { Loader2, ChevronDown } from "lucide-react"
 import CourseReviews from "@/components/course/CourseReviews"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -98,7 +100,7 @@ export default function CourseDetailPage() {
           On phones the card sits between the course info and the content. */}
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
         <Button variant="outline" size="sm" asChild>
-          <Link to="/courses"><ArrowLeft /> Back to courses</Link>
+          <Link to="/courses"><WiDirectionLeft className="size-5" /> Back to courses</Link>
         </Button>
       </div>
 
@@ -119,7 +121,7 @@ export default function CourseDetailPage() {
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{course.title}</h1>
             {course.summary && <p className="text-lg text-muted-foreground">{course.summary}</p>}
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-              {course.level && <span className="flex items-center gap-1.5"><BarChart3 className="size-4" /> {levelLabel(course.level)}</span>}
+              {course.level && <span className="flex items-center gap-1.5"><FaChartBar className="size-4" /> {levelLabel(course.level)}</span>}
               <span className="flex items-center gap-1.5"><IoBook className="size-4" /> {course.lessonCount ?? 0} lessons</span>
               <span className="flex items-center gap-1.5"><MdAccessTimeFilled className="size-[18px]" /> {formatMinutes(course.totalMinutes)}</span>
             </div>
@@ -194,17 +196,17 @@ export default function CourseDetailPage() {
                 )}
                 <div className={cn("grid gap-2", course.editable && "grid-cols-2")}>
                   {canQuiz ? (
-                    <Button className="h-9 w-full" variant="outline" asChild>
-                      <Link to={quizPath}><ListChecks /> Course quiz</Link>
+                    <Button className="h-9 w-full" variant="bordered" asChild>
+                      <Link to={quizPath}><MdQuiz className="size-4" /> Course quiz</Link>
                     </Button>
                   ) : (
                     // Final quiz is for enrolled learners: logged out → login, logged in → ask to enroll
-                    <Button className="h-9 w-full" variant="outline" onClick={() => gate(quizPath, { what: "the final quiz" })}>
-                      <TiLockClosed /> Course quiz
+                    <Button className="h-9 w-full" variant="bordered" onClick={() => gate(quizPath, { what: "the final quiz" })}>
+                      <MdQuiz className="size-4" /> Course quiz <TiLockClosed className="size-3.5 text-muted-foreground" />
                     </Button>
                   )}
                   {course.editable && (
-                    <Button className="h-9 w-full" variant="outline" asChild>
+                    <Button className="h-9 w-full" variant="bordered" asChild>
                       <Link to={`/admin/courses/${course.id}`}><BiSolidEditAlt /> Edit course</Link>
                     </Button>
                   )}
@@ -216,8 +218,8 @@ export default function CourseDetailPage() {
                 <ul className="space-y-2.5 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2.5"><IoBook className="size-4 text-foreground/70" /> {course.lessonCount ?? 0} lessons</li>
                   <li className="flex items-center gap-2.5"><MdAccessTimeFilled className="size-4 text-foreground/70" /> {formatMinutes(course.totalMinutes)} of content</li>
-                  {course.level && <li className="flex items-center gap-2.5"><BarChart3 className="size-4 text-foreground/70" /> {levelLabel(course.level)} level</li>}
-                  <li className="flex items-center gap-2.5"><ListChecks className="size-4 text-foreground/70" /> Final quiz</li>
+                  {course.level && <li className="flex items-center gap-2.5"><FaChartBar className="size-4 text-foreground/70" /> {levelLabel(course.level)} level</li>}
+                  <li className="flex items-center gap-2.5"><MdQuiz className="size-4 text-foreground/70" /> Final quiz</li>
                 </ul>
               </div>
 

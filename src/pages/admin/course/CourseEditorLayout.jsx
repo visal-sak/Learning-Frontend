@@ -1,6 +1,7 @@
 import { useState } from "react"
+import { WiDirectionLeft } from "react-icons/wi"
 import { Link, NavLink, Outlet, useParams } from "react-router-dom"
-import { ArrowLeft, Eye, Send, Globe, Loader2 } from "lucide-react"
+import { Eye, Send, Globe, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ErrorState, LoadingState, StatusBadge } from "@/components/course/CourseBits"
 import { FormError } from "@/components/auth/FormField"
@@ -47,7 +48,7 @@ export default function CourseEditorLayout() {
     <div className="space-y-6">
       <div>
         <Link to="/admin/courses" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> My courses
+          <WiDirectionLeft className="size-5" /> My courses
         </Link>
         <div className="mt-2 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex min-w-0 flex-wrap items-center gap-3">

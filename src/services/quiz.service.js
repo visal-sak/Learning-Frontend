@@ -13,6 +13,8 @@ export const quizService = {
   remove: (id) => del(`/quizzes/${id}`),
   // QuizDetailResponse (with correct answers)
   forEditing: (id) => get(`/quizzes/${id}/edit`),
+  // The course's quiz for its editor (one quiz per course) — 404 when it has none
+  forCourse: (courseId) => get(`/courses/${courseId}/quiz/edit`),
   allAttempts: (id) => get(`/quizzes/${id}/attempts`),
 
   // Questions — { quizId, text*, explanation, points, options: [{ id?, text*, correct }] (2–6) }

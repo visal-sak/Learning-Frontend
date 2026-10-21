@@ -38,7 +38,7 @@ export const BorderBeamButton = forwardRef(function BorderBeamButton(
       brightness={brightness ?? (dark ? 1.6 : 2.4)}
       className={cn(
         // 2px ring around the button: the beam travels in this gap, so it stays visible even on a filled button
-        "overflow-visible! inline-flex w-fit min-w-0 flex-col items-stretch rounded-[13px] p-[2px] leading-none",
+        "overflow-visible! inline-flex w-fit min-w-0 flex-col items-stretch rounded-[14px] p-[2px] leading-none",
         borderBeamClassName
       )}
       colorVariant={colorVariant}

@@ -32,7 +32,7 @@ export function EnrollmentList({ items }) {
               <span className="w-9 text-right text-xs text-zinc-500">{e.progress}%</span>
             </div>
           </div>
-          <Button size="icon" className="shrink-0 rounded-full" tabIndex={-1} aria-hidden>
+          <Button size="icon" className="shrink-0" tabIndex={-1} aria-hidden>
             <Play className="fill-current" />
           </Button>
         </Link>
