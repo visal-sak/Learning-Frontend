@@ -34,7 +34,7 @@ function tokensToState(t) {
 let refreshPromise = null
 
 // Other open tabs hear about a sign-out and drop their in-memory session too
-const authChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("learnova-auth") : null
+const authChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("autumn-auth") : null
 
 // Everything tied to the signed-in user. Device preferences (theme, admin sidebar collapsed) stay.
 function clearSessionData() {

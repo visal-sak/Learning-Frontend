@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import { GraduationCap } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 function Logo({ className }) {
   return (
@@ -7,12 +8,13 @@ function Logo({ className }) {
       <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
         <GraduationCap className="size-5" />
       </span>
-      <span className="text-lg tracking-tight">Learnova</span>
+      <span className="text-lg tracking-tight">Autumn</span>
     </Link>
   )
 }
 
 export default function AuthLayout({ title, subtitle, children, footer }) {
+  const { t } = useTranslation()
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside className="relative hidden overflow-hidden border-r bg-card lg:flex lg:flex-col lg:justify-between lg:p-10">
@@ -21,9 +23,9 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
         <Logo className="relative" />
         <blockquote className="relative max-w-md space-y-3">
           <p className="text-2xl font-medium leading-snug tracking-tight">
-            “The beautiful thing about learning is that nobody can take it away from you.”
+            {t("site.auth.quote")}
           </p>
-          <footer className="text-sm text-muted-foreground">— B.B. King</footer>
+          <footer className="text-sm text-muted-foreground">{t("site.auth.quoteAuthor")}</footer>
         </blockquote>
       </aside>
 

@@ -7,6 +7,7 @@ import { levelLabel } from "@/lib/constants"
 import { formatMinutes } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { CATEGORY_TAGS, LEVEL_TAG, categoryTag } from "@/lib/tags"
+import { useTranslation } from "react-i18next"
 
 const gradients = [
   "from-sky-500/40 to-indigo-500/10",
@@ -23,9 +24,10 @@ const initialsOf = (name = "") => name.split(" ").filter(Boolean).map((p) => p[0
 // `course` is a CourseSummary from GET /courses, shown on the cult-ui minimal card
 export default function CourseCard({ course }) {
   const { id, title, summary, level, categoryName, instructorName, lessonCount, totalMinutes, thumbnailUrl } = course
+  const { t } = useTranslation()
   const tags = [
     categoryName && { label: categoryName, className: categoryTag(categoryName) },
-    level && { label: levelLabel(level), className: LEVEL_TAG[level] ?? CATEGORY_TAGS[0] },
+    level && { label: t(`site.levels.${level}`, { defaultValue: levelLabel(level) }), className: LEVEL_TAG[level] ?? CATEGORY_TAGS[0] },
   ].filter(Boolean)
 
   return (
@@ -46,9 +48,9 @@ export default function CourseCard({ course }) {
 
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 px-3 pt-1">
-            {tags.map((t) => (
-              <span key={t.label} className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", t.className)}>
-                {t.label}
+            {tags.map((tag) => (
+              <span key={tag.label} className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", tag.className)}>
+                {tag.label}
               </span>
             ))}
           </div>

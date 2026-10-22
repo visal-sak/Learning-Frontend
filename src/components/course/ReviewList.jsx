@@ -6,12 +6,14 @@ import { Stars } from "@/components/admin/AdminUI"
 import { formatDate } from "@/lib/format"
 import { confirm } from "@/store/confirm.store"
 import { toast } from "@/lib/toast"
+import { useTranslation } from "react-i18next"
 
 const initials = (name = "?") => name.split(" ").map((p) => p[0]).slice(0, 2).join("")
 
 // `onDelete(review)` shows a delete button (admin moderation)
 export function ReviewItem({ review, onDelete, showCourse, footer }) {
   const [busy, setBusy] = useState(false)
+  const { t } = useTranslation()
   return (
     <li className="flex gap-3 py-4">
       <Avatar className="size-9">
@@ -21,14 +23,14 @@ export function ReviewItem({ review, onDelete, showCourse, footer }) {
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-sm font-medium">{review.authorName}</span>
-          {review.mine && <span className="rounded bg-accent px-1.5 text-[10px] font-semibold uppercase text-accent-foreground">You</span>}
+          {review.mine && <span className="rounded bg-accent px-1.5 text-[10px] font-semibold uppercase text-accent-foreground">{t("site.reviews.you")}</span>}
           <Stars value={review.rating} size="size-3.5" />
           <span className="text-xs text-muted-foreground">{formatDate(review.updatedAt ?? review.createdAt)}</span>
         </div>
-        {showCourse && review.courseTitle && <p className="text-xs text-muted-foreground">on {review.courseTitle}</p>}
+        {showCourse && review.courseTitle && <p className="text-xs text-muted-foreground">{t("site.reviews.on", { course: review.courseTitle })}</p>}
         {review.comment && <p className="whitespace-pre-line text-sm text-foreground/90">{review.comment}</p>}
         {review.percentCompleteWhenWritten != null && (
-          <p className="text-xs text-muted-foreground">Written at {review.percentCompleteWhenWritten}% course progress</p>
+          <p className="text-xs text-muted-foreground">{t("site.reviews.writtenAtCourse", { percent: review.percentCompleteWhenWritten })}</p>
         )}
         {footer}
       </div>
@@ -38,21 +40,21 @@ export function ReviewItem({ review, onDelete, showCourse, footer }) {
           variant="ghost"
           className="size-8 shrink-0 text-destructive hover:text-destructive"
           disabled={busy}
-          aria-label="Delete review"
+          aria-label={t("site.reviews.deleteAria")}
           onClick={async () => {
             const ok = await confirm({
-              title: "Delete this review?",
-              description: `By ${review.authorName}`,
-              body: "The review will be removed for everyone and the course rating will be recalculated.",
-              confirmLabel: "Delete review",
+              title: t("site.reviews.deleteOtherTitle"),
+              description: t("site.reviews.deleteOtherBy", { name: review.authorName }),
+              body: t("site.reviews.deleteOtherBody"),
+              confirmLabel: t("site.reviews.deleteConfirm"),
             })
             if (!ok) return
             setBusy(true)
             try {
               await onDelete(review)
-              toast.success("Review deleted")
+              toast.success(t("site.reviews.deleted"))
             } catch (err) {
-              toast.error("Couldn’t delete the review", err)
+              toast.error(t("site.reviews.deleteOtherFailed"), err)
             } finally {
               setBusy(false)
             }
@@ -66,6 +68,7 @@ export function ReviewItem({ review, onDelete, showCourse, footer }) {
 }
 
 export function RatingSummary({ summary }) {
+  const { t } = useTranslation()
   if (!summary) return null
   const total = summary.total ?? 0
   return (
@@ -73,7 +76,7 @@ export function RatingSummary({ summary }) {
       <div className="text-center sm:w-36">
         <p className="text-4xl font-bold tabular-nums">{total ? Number(summary.average).toFixed(1) : "—"}</p>
         <Stars value={summary.average ?? 0} />
-        <p className="mt-1 text-xs text-muted-foreground">{total} rating{total === 1 ? "" : "s"}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("site.reviews.ratings", { count: total })}</p>
       </div>
       <div className="flex-1 space-y-1.5">
         {[5, 4, 3, 2, 1].map((n) => {

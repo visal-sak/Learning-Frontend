@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { ChevronRight, Folder } from "lucide-react"
 import { LoadingState } from "@/components/course/CourseBits"
 import { useCatalogStore } from "@/store"
+import { useTranslation } from "react-i18next"
 
 const colors = ["text-sky-400", "text-yellow-300", "text-pink-400", "text-orange-400", "text-green-400", "text-blue-400"]
 
@@ -10,6 +11,7 @@ export default function Categories() {
   const categories = useCatalogStore((s) => s.categories)
   const status = useCatalogStore((s) => s.categoriesStatus)
   const fetchCategories = useCatalogStore((s) => s.fetchCategories)
+  const { t } = useTranslation()
 
   useEffect(() => {
     fetchCategories().catch(() => {})
@@ -21,11 +23,11 @@ export default function Categories() {
   return (
     <section id="categories" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold tracking-tight">Browse by category</h2>
-        <p className="mt-2 text-muted-foreground">Find the right path for where you want to go.</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t("site.home.categories.title")}</h2>
+        <p className="mt-2 text-muted-foreground">{t("site.home.categories.subtitle")}</p>
       </div>
       {status !== "success" ? (
-        <LoadingState />
+        <LoadingState variant="section" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((c, i) => (
@@ -40,7 +42,7 @@ export default function Categories() {
               <div className="min-w-0 flex-1">
                 <h3 className="truncate font-medium">{c.name}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {c.courseCount ?? 0} {c.courseCount === 1 ? "course" : "courses"}
+                  {t("site.home.categories.courses", { count: c.courseCount ?? 0 })}
                 </p>
               </div>
               <ChevronRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />

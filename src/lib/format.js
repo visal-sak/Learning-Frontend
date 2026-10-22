@@ -1,4 +1,11 @@
-export const formatMinutes = (m = 0) => (m >= 60 ? `${Math.floor(m / 60)}h ${m % 60 ? `${m % 60}m` : ""}`.trim() : `${m}m`)
+import i18n from "@/i18n"
+
+export const formatMinutes = (m = 0) =>
+  m >= 60
+    ? m % 60
+      ? i18n.t("site.format.hoursMinutes", { h: Math.floor(m / 60), m: m % 60 })
+      : i18n.t("site.format.hours", { h: Math.floor(m / 60) })
+    : i18n.t("site.format.minutes", { m })
 
 // Enrollment items may be flat or nest the course — normalise both
 export function normalizeEnrollment(e) {
@@ -11,6 +18,8 @@ export function normalizeEnrollment(e) {
     thumbnailUrl: c.thumbnailUrl ?? e.thumbnailUrl,
     instructorName: c.instructorName ?? e.instructorName,
     progress: Math.round(e.percentComplete ?? e.progress ?? c.percentComplete ?? 0),
+    completedLessons: e.completedLessons ?? null,
+    totalLessons: e.totalLessons ?? null,
   }
 }
 
@@ -30,7 +39,7 @@ export function getLessonMedia(lesson = {}) {
 export const flattenLessons = (course) =>
   (course?.sections ?? []).flatMap((s) => (s.lessons ?? []).map((l) => ({ ...l, sectionId: s.id, sectionTitle: s.title })))
 
-export const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "")
+export const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString(i18n.language === "km" ? "km-KH" : undefined, { year: "numeric", month: "short", day: "numeric" }) : "")
 
 export const formatBytes = (n = 0) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : n >= 1024 ? `${Math.round(n / 1024)} KB` : `${n} B`)
 
@@ -55,4 +64,4 @@ export const lessonAccess = (lessons, { enrolled, isDone }) =>
     : lessons.map((l) => ({ ...l, gated: false, needsEnroll: !l.preview, locked: l.locked || !l.preview }))
 
 export const lockReason = (l) =>
-  l.needsEnroll ? "Enroll in the course to unlock this lesson" : l.gated ? "Complete the previous lesson to unlock" : undefined
+  l.needsEnroll ? i18n.t("site.lessonLock.enroll") : l.gated ? i18n.t("site.lessonLock.previous") : undefined

@@ -1,16 +1,19 @@
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { WiDirectionLeft } from "react-icons/wi"
 import { Link, Outlet, useLocation } from "react-router-dom"
+import { LoadingState } from "@/components/course/CourseBits"
 import { useShallow } from "zustand/react/shallow"
+import { useTranslation } from "react-i18next"
 import {
   GraduationCap, Menu, X, LogOut, Moon, Sun,
 } from "lucide-react"
-import { TbApps, TbLibraryPhoto, TbClipboardCheck } from "react-icons/tb"
+import { TbApps, TbLibraryPhoto, TbClipboardCheck, TbReportAnalytics, TbFlag, TbCertificate } from "react-icons/tb"
 import { BiBookOpen } from "react-icons/bi"
 import { LuFileCheck } from "react-icons/lu"
 import { RiStackLine } from "react-icons/ri"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb"
+import LanguageSwitch from "@/components/LanguageSwitch"
 import ProfileDropdown, { SignOutDialog } from "@/components/ProfileDropdown"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -19,32 +22,40 @@ import { useAuthStore, useThemeStore, selectDisplayUser } from "@/store"
 import { useRoles } from "@/hooks/useRoles"
 import { useFetch } from "@/hooks/useFetch"
 import { courseService } from "@/services/course.service"
+import { moderationService } from "@/services/moderation.service"
 
 const COLLAPSE_KEY = "admin-sidebar-collapsed"
 // Outline react-icons for the nav; `size` can shrink a visually denser glyph
 const icon = (Icon, size = "size-[18px]") => <Icon className={size} aria-hidden />
 
 function useNavSections() {
+  const { t } = useTranslation()
   const { isAdmin } = useRoles()
   // Pending-review count for the badge (admins only)
   const { data: pending } = useFetch(() => (isAdmin ? courseService.pendingReview() : Promise.resolve([])), [isAdmin])
   const pendingCount = Array.isArray(pending) ? pending.length : 0
+  // Open review reports for the Moderation badge (admins only)
+  const { data: modSummary } = useFetch(() => (isAdmin ? moderationService.summary() : Promise.resolve(null)), [isAdmin])
+  const openReports = modSummary?.openReviewReports ?? 0
 
   return [
     {
-      label: "Workspace",
+      label: t("admin.nav.workspace"),
       items: [
-        { to: "/admin", label: "Overview", icon: TbApps, end: true },
-        { to: "/admin/courses", label: "My courses", icon: BiBookOpen },
-        { to: "/admin/reviews", label: "Student reviews", icon: LuFileCheck },
-        { to: "/admin/media", label: "Media library", icon: TbLibraryPhoto },
+        { to: "/admin", label: t("admin.nav.overview"), icon: TbApps, end: true },
+        { to: "/admin/courses", label: t("admin.nav.myCourses"), icon: BiBookOpen },
+        { to: "/admin/reviews", label: t("admin.nav.studentReviews"), icon: LuFileCheck },
+        { to: "/admin/media", label: t("admin.nav.mediaLibrary"), icon: TbLibraryPhoto },
+        { to: "/admin/assessments", label: t("admin.nav.assessments"), icon: TbReportAnalytics },
+        { to: "/admin/certificates", label: t("admin.nav.certificates"), icon: TbCertificate },
       ],
     },
     isAdmin && {
-      label: "Administration",
+      label: t("admin.nav.administration"),
       items: [
-        { to: "/admin/review-queue", label: "Review queue", icon: TbClipboardCheck, badge: pendingCount || null },
-        { to: "/admin/categories", label: "Categories", icon: RiStackLine },
+        { to: "/admin/review-queue", label: t("admin.nav.reviewQueue"), icon: TbClipboardCheck, badge: pendingCount || null },
+        { to: "/admin/categories", label: t("admin.nav.categories"), icon: RiStackLine },
+        { to: "/admin/moderation", label: t("admin.nav.moderation"), icon: TbFlag, badge: openReports || null },
       ],
     },
   ].filter(Boolean)
@@ -59,6 +70,7 @@ function CountBadge({ children }) {
 }
 
 function BrandMark() {
+  const { t } = useTranslation()
   const { collapsed } = useSidebar()
   const { isAdmin } = useRoles()
   return (
@@ -68,9 +80,9 @@ function BrandMark() {
       </div>
       {!collapsed && (
         <>
-          <span className="truncate text-[13.5px] font-semibold leading-none">Learnova</span>
+          <span className="truncate text-[13.5px] font-semibold leading-none">Autumn</span>
           <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {isAdmin ? "Admin" : "Instructor"}
+            {isAdmin ? t("admin.roles.admin") : t("admin.roles.instructor")}
           </span>
         </>
       )}
@@ -79,6 +91,7 @@ function BrandMark() {
 }
 
 function UserFooter({ onNavigate }) {
+  const { t } = useTranslation()
   const { collapsed } = useSidebar()
   const display = useAuthStore(useShallow(selectDisplayUser))
   const [confirmSignOut, setConfirmSignOut] = useState(false)
@@ -97,7 +110,7 @@ function UserFooter({ onNavigate }) {
         )}
       </Link>
       {!collapsed && (
-        <Button variant="ghost" size="icon-sm" onClick={() => setConfirmSignOut(true)} aria-label="Sign out" title="Sign out">
+        <Button variant="ghost" size="icon-sm" onClick={() => setConfirmSignOut(true)} aria-label={t("common.account.signOut")} title={t("common.account.signOut")}>
           <LogOut />
         </Button>
       )}
@@ -107,6 +120,7 @@ function UserFooter({ onNavigate }) {
 }
 
 function AdminSidebar({ variant, collapsed, onCollapsedChange, onNavigate, width = 248 }) {
+  const { t } = useTranslation()
   const { pathname } = useLocation()
   const sections = useNavSections()
   const isActive = (item) => (item.end ? pathname === item.to : pathname === item.to || pathname.startsWith(`${item.to}/`))
@@ -117,7 +131,7 @@ function AdminSidebar({ variant, collapsed, onCollapsedChange, onNavigate, width
       collapsed={collapsed}
       onCollapsedChange={onCollapsedChange}
       width={width}
-      aria-label="Dashboard navigation"
+      aria-label={t("admin.nav.ariaLabel")}
       className="bg-card"
     >
       <SidebarHeader>
@@ -142,7 +156,7 @@ function AdminSidebar({ variant, collapsed, onCollapsedChange, onNavigate, width
           </SidebarSection>
         ))}
         <SidebarSection>
-          <SidebarItem to="/" icon={<WiDirectionLeft className="size-[22px]" />} onClick={onNavigate}>Back to site</SidebarItem>
+          <SidebarItem to="/" icon={<WiDirectionLeft className="size-[22px]" />} onClick={onNavigate}>{t("admin.nav.backToSite")}</SidebarItem>
         </SidebarSection>
       </SidebarNav>
       <SidebarFooter>
@@ -161,6 +175,7 @@ function readCollapsed() {
 }
 
 export default function AdminLayout() {
+  const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(readCollapsed)
   const dark = useThemeStore((s) => s.dark)
@@ -195,7 +210,7 @@ export default function AdminLayout() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
           <div className="absolute inset-y-0 left-0 max-w-[85vw] shadow-xl animate-in slide-in-from-left duration-200">
             <AdminSidebar variant="default" width={272} onNavigate={() => setMobileOpen(false)} />
-            <Button variant="ghost" size="icon" className="absolute top-2.5 right-2" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+            <Button variant="ghost" size="icon" className="absolute top-2.5 right-2" onClick={() => setMobileOpen(false)} aria-label={t("admin.nav.closeMenu")}>
               <X />
             </Button>
           </div>
@@ -204,11 +219,12 @@ export default function AdminLayout() {
 
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-40 flex h-[52px] items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label={t("admin.nav.openMenu")}>
             <Menu />
           </Button>
           <AdminBreadcrumb />
-          <Button variant="ghost" size="icon" className="ml-auto" onClick={toggleTheme} aria-label="Toggle theme">
+          <LanguageSwitch className="ml-auto" />
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={t("common.theme.toggle")}>
             {dark ? <Sun /> : <Moon />}
           </Button>
           <ProfileDropdown />
@@ -216,7 +232,10 @@ export default function AdminLayout() {
         {/* Full-width content, 20px padding on every side */}
         <main className="w-full p-5">
           <ErrorBoundary resetKey={location.pathname}>
-            <Outlet />
+            {/* Own loading boundary: opening a page swaps only this area, the sidebar and header stay put */}
+            <Suspense fallback={<LoadingState />}>
+              <Outlet />
+            </Suspense>
           </ErrorBoundary>
         </main>
       </div>

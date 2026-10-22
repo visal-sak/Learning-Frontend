@@ -1,9 +1,5 @@
-import { useRef } from "react"
-import { useInView } from "motion/react"
-import RansomNote from "@/components/ui/ransom-note"
 import { DeployGlobe } from "@/components/ui/illustration-globe-vercel"
-
-const HEADLINE = "Get 7 days of Pro, free"
+import { useTranslation } from "react-i18next"
 
 // Brand green for the learning paths travelling across the globe
 const ACCENT = "#22C55E"
@@ -29,26 +25,13 @@ const NODES = [
 ]
 
 export default function CTA() {
-  const ref = useRef(null)
-  // Start the "assemble" animation when the section scrolls into view (it sits near the page bottom)
-  const inView = useInView(ref, { once: true, amount: 0.4 })
-
+  const { t } = useTranslation()
   return (
-    <section ref={ref} className="mx-auto flex max-w-3xl flex-col items-center px-4 pt-20 pb-8 text-center sm:px-6">
-      <h2 className="text-4xl font-bold sm:text-5xl md:text-6xl">
-        {inView ? (
-          <RansomNote text={HEADLINE} seed={21} intensity={0.7} className="justify-center [&>div]:justify-center [&>div]:gap-y-2" />
-        ) : (
-          // Same text, invisible, so the layout doesn’t jump when the scraps fly in
-          <span className="invisible">{HEADLINE}</span>
-        )}
-      </h2>
-      <p className="mt-6 max-w-xl text-muted-foreground">Unlimited courses, certificates and mentor Q&A. Cancel anytime.</p>
-
+    <section className="mx-auto flex max-w-3xl flex-col items-center px-4 pt-16 pb-8 text-center sm:px-6">
       {/* Learners around the world: paths travel to lessons, quizzes, mentors and certificates */}
       {/* overflow-hidden: the SVG draws the whole sphere (overflow: visible); only the top dome should show */}
-      <div className="relative mt-10 w-full max-w-[680px] overflow-hidden">
-        <DeployGlobe nodes={NODES} accentColor={ACCENT} duration={4.5} label="learning worldwide" />
+      <div className="relative w-full max-w-[680px] overflow-hidden">
+        <DeployGlobe nodes={NODES} accentColor={ACCENT} duration={4.5} label={t("site.home.cta.globeLabel")} />
         {/* soft fade into the page at the bottom of the globe */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent" />
       </div>

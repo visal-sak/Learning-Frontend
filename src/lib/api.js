@@ -1,5 +1,6 @@
 import axios from "axios"
 import { env } from "@/config/env"
+import i18n from "@/i18n"
 
 export const api = axios.create({
   baseURL: env.apiBaseUrl,
@@ -20,6 +21,8 @@ export function configureApi(h) {
 api.interceptors.request.use(async (config) => {
   const token = await handlers.getAccessToken()
   if (token) config.headers.Authorization = `Bearer ${token}`
+  // Backend messages come back in the UI language (English / Khmer)
+  config.headers["Accept-Language"] = i18n.language || "en"
   return config
 })
 

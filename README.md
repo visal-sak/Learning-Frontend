@@ -1,4 +1,4 @@
-# Learnova — E-learning (React + Vite + JS)
+# Autumn — E-learning (React + Vite + JS)
 
 Dark-mode e-learning landing page built with:
 

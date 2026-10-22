@@ -34,6 +34,12 @@ const ReviewQueuePage = lazy(() => import("@/pages/admin/ReviewQueuePage"))
 const CategoriesPage = lazy(() => import("@/pages/admin/CategoriesPage"))
 const InstructorReviewsPage = lazy(() => import("@/pages/admin/InstructorReviewsPage"))
 const MediaPage = lazy(() => import("@/pages/admin/MediaPage"))
+const AssessmentsPage = lazy(() => import("@/pages/admin/AssessmentsPage"))
+const AdminCertificatesPage = lazy(() => import("@/pages/admin/CertificatesPage"))
+const AssessmentDetailPage = lazy(() => import("@/pages/admin/AssessmentDetailPage"))
+const ModerationPage = lazy(() => import("@/pages/admin/ModerationPage"))
+const CertificatePage = lazy(() => import("@/pages/CertificatePage"))
+const AboutPage = lazy(() => import("@/pages/AboutPage"))
 
 export default function App() {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -48,13 +54,16 @@ export default function App() {
 
   return (
     <>
-    <Suspense fallback={<LoadingState className="py-40" />}>
+    <Suspense fallback={<LoadingState className="min-h-dvh" />}>
     <Routes>
       {/* Public site */}
       <Route element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="courses" element={<CoursesPage />} />
         <Route path="courses/:id" element={<CourseDetailPage />} />
+        {/* Public: verify a certificate by serial without an account */}
+        <Route path="certificates/:serial" element={<CertificatePage />} />
+        <Route path="about" element={<AboutPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="profile" element={<ProfilePage />} />
@@ -83,11 +92,15 @@ export default function App() {
           </Route>
           <Route path="reviews" element={<InstructorReviewsPage />} />
           <Route path="media" element={<MediaPage />} />
+          <Route path="assessments" element={<AssessmentsPage />} />
+          <Route path="certificates" element={<AdminCertificatesPage />} />
+          <Route path="assessments/:courseId" element={<AssessmentDetailPage />} />
 
           {/* ADMIN only */}
           <Route element={<RoleRoute roles={[ROLES.ADMIN]} />}>
             <Route path="review-queue" element={<ReviewQueuePage />} />
             <Route path="categories" element={<CategoriesPage />} />
+            <Route path="moderation" element={<ModerationPage />} />
           </Route>
         </Route>
       </Route>

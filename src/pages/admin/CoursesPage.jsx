@@ -1,5 +1,7 @@
 import { useState } from "react"
+import { MdLibraryBooks } from "react-icons/md"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { Plus, Send, Loader2, Globe } from "lucide-react"
 import { BiSolidArchive, BiSolidEditAlt, BiSolidTrash } from "react-icons/bi"
 import { HiUsers } from "react-icons/hi"
@@ -20,6 +22,7 @@ import { confirm } from "@/store/confirm.store"
 import { toast } from "@/lib/toast"
 
 export default function CoursesPage() {
+  const { t } = useTranslation()
   const { isAdmin } = useRoles()
   const { data, loading, error, reload } = useFetch(() => courseService.mine(), [])
   const all = data ?? []
@@ -37,30 +40,30 @@ export default function CoursesPage() {
       reload()
       if (successMsg) toast.success(successMsg)
     } catch (err) {
-      setActionError(getErrorMessage(err, "Action failed"))
-      toast.error("Action failed", err)
+      setActionError(getErrorMessage(err, t("admin.shared.actionFailed")))
+      toast.error(t("admin.shared.actionFailed"), err)
     } finally {
       setBusyId(null)
     }
   }
 
-  const statusToast = { PUBLISHED: "Course published", PENDING_REVIEW: "Submitted for review", ARCHIVED: "Course archived", DRAFT: "Moved back to draft" }
+  const statusToast = { PUBLISHED: t("admin.courses.toast.published"), PENDING_REVIEW: t("admin.courses.toast.submitted"), ARCHIVED: t("admin.courses.toast.archived"), DRAFT: t("admin.courses.toast.draft") }
   const setStatus = (c, status, note) => run(c.id, () => courseService.changeStatus(c.id, status, note), statusToast[status])
   const onDelete = async (c) => {
     const ok = await confirm({
-      title: `Delete “${c.title}”?`,
-      description: "This can’t be undone.",
-      body: "The course, its sections, lessons and quiz will be permanently removed, and enrolled students will lose access.",
-      confirmLabel: "Delete course",
+      title: t("admin.courses.deleteDialog.title", { title: c.title }),
+      description: t("admin.shared.cantUndo"),
+      body: t("admin.courses.deleteDialog.body"),
+      confirmLabel: t("admin.courses.deleteDialog.confirm"),
     })
-    if (ok) run(c.id, () => courseService.remove(c.id), "Course deleted")
+    if (ok) run(c.id, () => courseService.remove(c.id), t("admin.courses.toast.deleted"))
   }
 
   return (
     <>
-      <PageHeader title="My courses" description="Create, edit and publish the courses you teach.">
+      <PageHeader title={t("admin.courses.title")} description={t("admin.courses.description")}>
         <Button asChild variant="solid" className="border-foreground bg-foreground text-background hover:bg-foreground/85">
-          <Link to="/admin/courses/new"><Plus /> New course</Link>
+          <Link to="/admin/courses/new"><Plus /> {t("admin.courses.newCourse")}</Link>
         </Button>
       </PageHeader>
 
@@ -74,7 +77,7 @@ export default function CoursesPage() {
               filter === s && "bg-white text-foreground shadow-sm dark:bg-neutral-800"
             )}
           >
-            {s === "ALL" ? "All" : COURSE_STATUS[s].label}
+            {s === "ALL" ? t("admin.courses.all") : t(`admin.courseStatus.${s}`, { defaultValue: COURSE_STATUS[s].label })}
             <span
               className={cn(
                 "rounded-full px-1.5 text-[11px] font-semibold tabular-nums",
@@ -94,8 +97,8 @@ export default function CoursesPage() {
       ) : error ? (
         <ErrorState error={error} onRetry={reload} />
       ) : courses.length === 0 ? (
-        <EmptyState title={all.length ? "No courses with this status" : "No courses yet"}>
-          {!all.length && <Link to="/admin/courses/new" className="text-primary hover:underline">Create your first course</Link>}
+        <EmptyState icon={MdLibraryBooks} title={all.length ? t("admin.courses.emptyFiltered") : t("admin.courses.empty")}>
+          {!all.length && <Link to="/admin/courses/new" className="text-primary hover:underline">{t("admin.courses.createFirst")}</Link>}
         </EmptyState>
       ) : (
         <CourseTable
@@ -112,6 +115,7 @@ export default function CoursesPage() {
 
 // White table (desktop) / stacked cards (phones), same look as the other admin tables
 function CourseTable({ courses, isAdmin, busyId, onStatus, onDelete }) {
+  const { t } = useTranslation()
   const th = "px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
   return (
     <div className="overflow-hidden rounded-xl border border-neutral-200/80 bg-white dark:border-neutral-800 dark:bg-neutral-900">
@@ -119,11 +123,11 @@ function CourseTable({ courses, isAdmin, busyId, onStatus, onDelete }) {
       <table className="hidden w-full text-sm md:table">
         <thead className="border-b border-neutral-200/80 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800/40">
           <tr>
-            <th className={th}>Course</th>
-            <th className={th}>Category</th>
-            <th className={th}>Level</th>
-            <th className={th}>Status</th>
-            <th className={cn(th, "text-right")}>Actions</th>
+            <th className={th}>{t("admin.courses.columns.course")}</th>
+            <th className={th}>{t("admin.courses.columns.category")}</th>
+            <th className={th}>{t("admin.courses.columns.level")}</th>
+            <th className={th}>{t("admin.courses.columns.status")}</th>
+            <th className={cn(th, "text-right")}>{t("admin.courses.columns.actions")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-neutral-200/80 dark:divide-neutral-800">
@@ -136,7 +140,7 @@ function CourseTable({ courses, isAdmin, busyId, onStatus, onDelete }) {
                 {c.categoryName ? <Tag className={categoryTag(c.categoryName)}>{c.categoryName}</Tag> : <span className="text-muted-foreground">—</span>}
               </td>
               <td className="px-4 py-3">
-                {c.level ? <Tag className={LEVEL_TAG[c.level]}>{levelLabel(c.level)}</Tag> : <span className="text-muted-foreground">—</span>}
+                {c.level ? <Tag className={LEVEL_TAG[c.level]}>{t(`admin.levels.${c.level}`, { defaultValue: levelLabel(c.level) })}</Tag> : <span className="text-muted-foreground">—</span>}
               </td>
               <td className="px-4 py-3">
                 <StatusBadge status={c.status} />
@@ -157,7 +161,7 @@ function CourseTable({ courses, isAdmin, busyId, onStatus, onDelete }) {
             <div className="flex flex-wrap items-center gap-1.5">
               <StatusBadge status={c.status} />
               {c.categoryName && <Tag className={categoryTag(c.categoryName)}>{c.categoryName}</Tag>}
-              {c.level && <Tag className={LEVEL_TAG[c.level]}>{levelLabel(c.level)}</Tag>}
+              {c.level && <Tag className={LEVEL_TAG[c.level]}>{t(`admin.levels.${c.level}`, { defaultValue: levelLabel(c.level) })}</Tag>}
             </div>
             <RowActions course={c} isAdmin={isAdmin} busy={busyId === c.id} onStatus={onStatus} onDelete={onDelete} className="justify-start" />
           </li>
@@ -173,6 +177,7 @@ function Tag({ className, children }) {
 
 // Thumbnail on a #f5f5f5 panel + title + lessons/duration
 function CourseCell({ course: c }) {
+  const { t } = useTranslation()
   return (
     <Link to={`/admin/courses/${c.id}`} className="group flex min-w-0 items-center gap-3">
       <span className="block w-24 shrink-0 overflow-hidden rounded-lg bg-[#f5f5f5] dark:bg-neutral-800">
@@ -181,7 +186,7 @@ function CourseCell({ course: c }) {
       <span className="min-w-0">
         <span className="block truncate font-semibold group-hover:text-primary group-hover:underline">{c.title}</span>
         <span className="block text-xs text-muted-foreground">
-          {c.lessonCount ?? 0} lesson{c.lessonCount === 1 ? "" : "s"} · {formatMinutes(c.totalMinutes)}
+          {t("admin.courses.lessonCount", { count: c.lessonCount ?? 0 })} · {formatMinutes(c.totalMinutes)}
         </span>
       </span>
     </Link>
@@ -191,31 +196,32 @@ function CourseCell({ course: c }) {
 const iconBtn = "size-8"
 
 function RowActions({ course: c, isAdmin, busy, onStatus, onDelete, className }) {
+  const { t } = useTranslation()
   return (
     <div className={cn("flex flex-wrap items-center justify-end gap-1.5", className)}>
       {busy && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
       {!isAdmin && (c.status === "DRAFT" || c.status === "REJECTED") && (
         <Button size="sm" variant="bordered" disabled={busy} onClick={() => onStatus(c, "PENDING_REVIEW", "Ready for review")}>
-          <Send /> Submit for review
+          <Send /> {t("admin.courses.submitForReview")}
         </Button>
       )}
       {isAdmin && c.status !== "PUBLISHED" && (
         <Button size="sm" variant="bordered" disabled={busy} onClick={() => onStatus(c, "PUBLISHED", "Published by admin")}>
-          <Globe /> Publish
+          <Globe /> {t("admin.courses.publish")}
         </Button>
       )}
       {c.status === "PUBLISHED" && (
-        <Button size="icon" variant="bordered" className={iconBtn} disabled={busy} onClick={() => onStatus(c, "ARCHIVED", "Archived")} aria-label="Archive" title="Archive">
+        <Button size="icon" variant="bordered" className={iconBtn} disabled={busy} onClick={() => onStatus(c, "ARCHIVED", "Archived")} aria-label={t("admin.courses.archive")} title={t("admin.courses.archive")}>
           <BiSolidArchive className="size-4" />
         </Button>
       )}
-      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label="Students" title="Students">
+      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label={t("admin.courses.students")} title={t("admin.courses.students")}>
         <Link to={`/admin/courses/${c.id}/students`}><HiUsers className="size-4" /></Link>
       </Button>
-      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label="View" title="View on site">
+      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label={t("common.actions.view")} title={t("admin.courses.viewOnSite")}>
         <Link to={`/courses/${c.id}`}><IoEye className="size-4" /></Link>
       </Button>
-      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label="Edit" title="Edit">
+      <Button size="icon" variant="bordered" className={iconBtn} asChild aria-label={t("common.actions.edit")} title={t("common.actions.edit")}>
         <Link to={`/admin/courses/${c.id}`}><BiSolidEditAlt className="size-4" /></Link>
       </Button>
       <Button
@@ -224,8 +230,8 @@ function RowActions({ course: c, isAdmin, busy, onStatus, onDelete, className })
         className={cn(iconBtn, "text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10")}
         disabled={busy}
         onClick={() => onDelete(c)}
-        aria-label="Delete"
-        title="Delete"
+        aria-label={t("common.actions.delete")}
+        title={t("common.actions.delete")}
       >
         <BiSolidTrash className="size-4" />
       </Button>

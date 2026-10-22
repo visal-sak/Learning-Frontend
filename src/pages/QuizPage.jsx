@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { MdQuiz, MdLock } from "react-icons/md"
 import { HiCheckCircle } from "react-icons/hi"
 import { BiSolidXCircle } from "react-icons/bi"
 import { RiCheckboxCircleFill } from "react-icons/ri"
 import { WiDirectionLeft } from "react-icons/wi"
-import { Link, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
+import { MdWorkspacePremium } from "react-icons/md"
+import { certificateService } from "@/services/certificate.service"
 import { ArrowRight, Clock, Trophy, Loader2, RotateCcw, ListChecks, Target, Lightbulb } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FormError } from "@/components/auth/FormField"
-import { LoadingState } from "@/components/course/CourseBits"
+import { LoadingState, EmptyState } from "@/components/course/CourseBits"
 import { quizService } from "@/services/quiz.service"
 import { getErrorMessage } from "@/lib/api"
 import { formatDate } from "@/lib/format"
@@ -17,9 +20,11 @@ import { StatCard } from "@/components/StatCard"
 import { isAnswered, questionType, toSubmitAnswer } from "@/lib/quiz"
 import { confirm } from "@/store/confirm.store"
 import { toast } from "@/lib/toast"
+import { useTranslation } from "react-i18next"
 
 export default function QuizPage() {
   const { id: courseId } = useParams()
+  const { t } = useTranslation()
   const [quiz, setQuiz] = useState(null)
   const [attempts, setAttempts] = useState([])
   const [loadError, setLoadError] = useState(null)
@@ -53,21 +58,27 @@ export default function QuizPage() {
 
   const back = (
     <Link to={`/courses/${courseId}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-      <WiDirectionLeft className="size-5" /> Back to course
+      <WiDirectionLeft className="size-5" /> {t("site.quiz.backToCourse")}
     </Link>
   )
 
-  if (loading) return <LoadingState className="py-32" />
+  if (loading) return <LoadingState />
 
   if (loadError) {
     const status = loadError.response?.status
     return (
-      <div className="mx-auto max-w-xl space-y-6 px-4 py-16 text-center sm:px-6">
-        <ListChecks className="mx-auto size-10 text-muted-foreground" />
-        <h1 className="text-xl font-semibold">{status === 404 ? "This course has no quiz yet" : "You can’t take this quiz right now"}</h1>
-        <p className="text-sm text-muted-foreground">{status === 404 ? "Check back later." : getErrorMessage(loadError)}</p>
-        {back}
-      </div>
+      <EmptyState
+        variant="page"
+        icon={status === 404 ? MdQuiz : MdLock}
+        title={status === 404 ? t("site.quiz.noQuiz") : t("site.quiz.cantTake")}
+        action={
+          <Button variant="bordered" asChild>
+            <Link to={`/courses/${courseId}`}><WiDirectionLeft className="size-5" /> {t("site.quiz.backToCourse")}</Link>
+          </Button>
+        }
+      >
+        {status === 404 ? t("site.quiz.checkBack") : getErrorMessage(loadError)}
+      </EmptyState>
     )
   }
 
@@ -112,6 +123,7 @@ function Intro({ quiz, attempts, attemptsLeft, onStart }) {
   const used = (quiz.attemptNo ?? 1) - 1
   const outOfAttempts = attemptsLeft != null && attemptsLeft <= 0
   const card = QUIZ_CARD
+  const { t } = useTranslation()
 
   return (
     <>
@@ -119,30 +131,30 @@ function Intro({ quiz, attempts, attemptsLeft, onStart }) {
       <section className={card}>
         <div className="p-6 sm:p-8">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/12 px-2.5 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
-            <ListChecks className="size-3.5" /> Final quiz
+            <ListChecks className="size-3.5" /> {t("site.quiz.finalQuiz")}
           </span>
           <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">{quiz.title}</h1>
           {quiz.instructions && <p className="mt-2 max-w-2xl whitespace-pre-line font-medium text-muted-foreground">{quiz.instructions}</p>}
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard variant="inset" icon={ListChecks} tone="sky" label="Questions" subtitle="In this quiz" value={quiz.questions?.length ?? 0} />
-            <StatCard variant="inset" icon={Target} tone="green" label="Pass mark" subtitle="Score needed" value={`${quiz.passMark ?? 0}%`} />
+            <StatCard variant="inset" icon={ListChecks} tone="sky" label={t("site.quiz.stats.questions")} subtitle={t("site.quiz.stats.questionsSub")} value={quiz.questions?.length ?? 0} />
+            <StatCard variant="inset" icon={Target} tone="green" label={t("site.quiz.stats.passMark")} subtitle={t("site.quiz.stats.passMarkSub")} value={`${quiz.passMark ?? 0}%`} />
             <StatCard
               variant="inset"
               icon={Clock}
               tone="amber"
-              label="Time limit"
-              subtitle="Per attempt"
-              value={quiz.timeLimitMinutes ? `${quiz.timeLimitMinutes} min` : "None"}
+              label={t("site.quiz.stats.timeLimit")}
+              subtitle={t("site.quiz.stats.timeLimitSub")}
+              value={quiz.timeLimitMinutes ? t("site.quiz.stats.minutes", { count: quiz.timeLimitMinutes }) : t("site.quiz.stats.none")}
             />
             <StatCard
               variant="inset"
               icon={RotateCcw}
               tone="violet"
-              label="Attempts"
-              subtitle="Used so far"
+              label={t("site.quiz.stats.attempts")}
+              subtitle={t("site.quiz.stats.attemptsSub")}
               value={quiz.maxAttempts ? `${used} / ${quiz.maxAttempts}` : used}
-              detail={attemptsLeft != null ? (attemptsLeft > 0 ? `${attemptsLeft} left` : "No attempts left") : "Unlimited"}
+              detail={attemptsLeft != null ? (attemptsLeft > 0 ? t("site.quiz.stats.left", { count: attemptsLeft }) : t("site.quiz.stats.noneLeft")) : t("site.quiz.stats.unlimited")}
               detailTone={attemptsLeft != null && attemptsLeft <= 0 ? "down" : "muted"}
             />
           </div>
@@ -150,15 +162,15 @@ function Intro({ quiz, attempts, attemptsLeft, onStart }) {
           <div className="mt-6 flex flex-col gap-4 border-t border-neutral-200/80 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
             <p className="text-sm text-muted-foreground">
               {outOfAttempts
-                ? "You have used all your attempts."
+                ? t("site.quiz.intro.outOfAttempts")
                 : passed
-                  ? <span className="font-medium text-emerald-600 dark:text-emerald-400">You passed — best score {best}%. You can try again to improve it.</span>
+                  ? <span className="font-medium text-emerald-600 dark:text-emerald-400">{t("site.quiz.intro.passed", { best })}</span>
                   : attempts.length
-                    ? `Best score so far: ${best}%. You need ${quiz.passMark ?? 0}% to pass.`
-                    : "Ready when you are. The timer starts when you begin."}
+                    ? t("site.quiz.intro.bestSoFar", { best, passMark: quiz.passMark ?? 0 })
+                    : t("site.quiz.intro.ready")}
             </p>
             <Button size="lg" onClick={onStart} disabled={outOfAttempts || !quiz.questions?.length}>
-              {attempts.length ? <><RotateCcw /> Start new attempt</> : <>Start quiz <ArrowRight /></>}
+              {attempts.length ? <><RotateCcw /> {t("site.quiz.intro.newAttempt")}</> : <>{t("site.quiz.intro.start")} <ArrowRight /></>}
             </Button>
           </div>
         </div>
@@ -167,13 +179,13 @@ function Intro({ quiz, attempts, attemptsLeft, onStart }) {
       {/* Past attempts in their own table card */}
       {attempts.length > 0 && (
         <section className={cn(card, "overflow-hidden")}>
-          <h2 className="bg-neutral-50 px-6 py-3 text-[15px] font-bold sm:px-8 dark:bg-neutral-800/40">Your attempts</h2>
+          <h2 className="bg-neutral-50 px-6 py-3 text-[15px] font-bold sm:px-8 dark:bg-neutral-800/40">{t("site.quiz.attempts.title")}</h2>
           <ul className="divide-y divide-neutral-200/80 border-t border-neutral-200/80 text-sm dark:divide-neutral-800 dark:border-neutral-800">
             {attempts.map((a) => (
               <li key={a.attemptId} className="flex items-center gap-4 px-6 py-3 sm:px-8">
                 <span className="w-10 font-medium text-muted-foreground">#{a.attemptNo}</span>
                 <span className="flex-1 text-muted-foreground">{formatDate(a.submittedAt)}</span>
-                <span className="hidden tabular-nums text-muted-foreground sm:inline">{a.correctCount}/{a.totalQuestions} correct</span>
+                <span className="hidden tabular-nums text-muted-foreground sm:inline">{t("site.quiz.attempts.correct", { correct: a.correctCount, total: a.totalQuestions })}</span>
                 <span className="w-12 text-right font-semibold tabular-nums">{a.score}%</span>
                 <span
                   className={cn(
@@ -183,7 +195,7 @@ function Intro({ quiz, attempts, attemptsLeft, onStart }) {
                       : "bg-rose-500/12 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
                   )}
                 >
-                  {a.passed ? "Passed" : "Failed"}
+                  {a.passed ? t("site.quiz.attempts.passed") : t("site.quiz.attempts.failed")}
                 </span>
               </li>
             ))}
@@ -196,6 +208,7 @@ function Intro({ quiz, attempts, attemptsLeft, onStart }) {
 
 function Taking({ quiz, onSubmitted }) {
   const [answers, setAnswers] = useState({})
+  const { t } = useTranslation()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [secondsLeft, setSecondsLeft] = useState(quiz.timeLimitMinutes ? quiz.timeLimitMinutes * 60 : null)
@@ -206,11 +219,11 @@ function Taking({ quiz, onSubmitted }) {
     async (force = false) => {
       if (!force && answered < questions.length) {
         const ok = await confirm({
-          title: "Submit with unanswered questions?",
-          description: `You answered ${answered} of ${questions.length}.`,
-          body: "Unanswered questions are marked as incorrect.",
-          confirmLabel: "Submit anyway",
-          cancelLabel: "Keep answering",
+          title: t("site.quiz.confirm.title"),
+          description: t("site.quiz.confirm.description", { answered, total: questions.length }),
+          body: t("site.quiz.confirm.body"),
+          confirmLabel: t("site.quiz.confirm.submit"),
+          cancelLabel: t("site.quiz.confirm.keep"),
           tone: "warning",
         })
         if (!ok) return
@@ -221,25 +234,25 @@ function Taking({ quiz, onSubmitted }) {
         const payload = questions.map((q) => toSubmitAnswer(q, answers[q.id]))
         const result = await quizService.submit(quiz.id, payload)
         onSubmitted(result)
-        if (result?.passed) toast.success("Quiz passed!", `You scored ${result.score}%`)
-        else if (result) toast.warning("Not passed this time", `You scored ${result.score}% — pass mark is ${result.passMark}%`)
+        if (result?.passed) toast.success(t("site.quiz.toast.passed"), t("site.quiz.toast.scored", { score: result.score }))
+        else if (result) toast.warning(t("site.quiz.toast.notPassed"), t("site.quiz.toast.scoredFail", { score: result.score, passMark: result.passMark }))
       } catch (err) {
-        setError(getErrorMessage(err, "Couldn’t submit your answers"))
-        toast.error("Couldn’t submit your answers", err)
+        setError(getErrorMessage(err, t("site.quiz.toast.submitFailed")))
+        toast.error(t("site.quiz.toast.submitFailed"), err)
         setSubmitting(false)
       }
     },
-    [answered, answers, onSubmitted, questions, quiz.id]
+    [answered, answers, onSubmitted, questions, quiz.id, t]
   )
 
   // Countdown; auto-submit when time runs out
   useEffect(() => {
     if (secondsLeft == null || submitting) return
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       if (secondsLeft <= 1) submit(true)
       else setSecondsLeft(secondsLeft - 1)
     }, 1000)
-    return () => clearTimeout(t)
+    return () => clearTimeout(timer)
   }, [secondsLeft, submit, submitting])
 
   const progress = questions.length ? Math.round((answered / questions.length) * 100) : 0
@@ -251,7 +264,7 @@ function Taking({ quiz, onSubmitted }) {
       <div className={cn(QUIZ_CARD, "sticky top-16 z-30 px-5 py-4 sm:px-6")}>
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Final quiz</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("site.quiz.finalQuiz")}</p>
             <p className="truncate text-[15px] font-bold">{quiz.title}</p>
           </div>
           {secondsLeft != null && (
@@ -272,7 +285,7 @@ function Taking({ quiz, onSubmitted }) {
             <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${progress}%` }} />
           </div>
           <span className="shrink-0 text-xs font-medium text-muted-foreground tabular-nums">
-            {answered}/{questions.length} answered
+            {t("site.quiz.taking.answeredCount", { answered, total: questions.length })}
           </span>
         </div>
       </div>
@@ -286,17 +299,17 @@ function Taking({ quiz, onSubmitted }) {
               <div className="flex items-center justify-between gap-3">
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                    Question {i + 1} of {questions.length}
+                    {t("site.quiz.taking.questionOf", { n: i + 1, total: questions.length })}
                   </span>
-                  {type === "MULTIPLE_CHOICE" && <span className="text-xs font-medium text-muted-foreground">Select all that apply</span>}
+                  {type === "MULTIPLE_CHOICE" && <span className="text-xs font-medium text-muted-foreground">{t("site.quiz.taking.selectAll")}</span>}
                 </span>
                 <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                   {done && (
                     <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                      <HiCheckCircle className="size-4" /> Answered
+                      <HiCheckCircle className="size-4" /> {t("site.quiz.taking.answered")}
                     </span>
                   )}
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 dark:bg-neutral-800">{q.points ?? 1} pt</span>
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 dark:bg-neutral-800">{t("site.quiz.taking.points", { count: q.points ?? 1 })}</span>
                 </span>
               </div>
               <p className="mt-3 text-lg font-semibold leading-snug">{q.text}</p>
@@ -311,11 +324,11 @@ function Taking({ quiz, onSubmitted }) {
       <div className={cn(QUIZ_CARD, "flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6")}>
         <p className="text-sm text-muted-foreground">
           {answered === questions.length
-            ? "All questions answered — ready to submit."
-            : `${questions.length - answered} question${questions.length - answered === 1 ? "" : "s"} left unanswered.`}
+            ? t("site.quiz.taking.allAnswered")
+            : t("site.quiz.taking.unanswered", { count: questions.length - answered })}
         </p>
         <Button size="lg" onClick={() => submit(false)} disabled={submitting}>
-          {submitting && <Loader2 className="animate-spin" />} Submit answers
+          {submitting && <Loader2 className="animate-spin" />} {t("site.quiz.taking.submit")}
         </Button>
       </div>
     </div>
@@ -324,17 +337,18 @@ function Taking({ quiz, onSubmitted }) {
 
 // One answer control per question type
 function QuestionInput({ question, type, value, onChange }) {
+  const { t } = useTranslation()
   if (type === "SHORT_ANSWER") {
     return (
       <div className="mt-4">
         <Input
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Type your answer"
-          aria-label="Your answer"
+          placeholder={t("site.quiz.taking.typeAnswer")}
+          aria-label={t("site.quiz.taking.yourAnswer")}
           className="h-11 rounded-xl text-sm"
         />
-        <p className="mt-1.5 text-xs text-muted-foreground">Capital letters and extra spaces don’t matter.</p>
+        <p className="mt-1.5 text-xs text-muted-foreground">{t("site.quiz.taking.caseHint")}</p>
       </div>
     )
   }
@@ -374,9 +388,10 @@ function QuestionInput({ question, type, value, onChange }) {
                 selected ? "bg-primary text-primary-foreground" : "bg-neutral-100 text-muted-foreground dark:bg-neutral-800"
               )}
             >
-              {multi && selected ? <HiCheckCircle className="size-4" /> : type === "TRUE_FALSE" ? (o.text === "True" ? "T" : "F") : String.fromCharCode(65 + oi)}
+              {multi && selected ? <HiCheckCircle className="size-4" /> : type === "TRUE_FALSE" ? (o.text === "True" ? t("site.quiz.taking.trueShort") : t("site.quiz.taking.falseShort")) : String.fromCharCode(65 + oi)}
             </span>
-            <span className="flex-1">{o.text}</span>
+            {/* True/False options are fixed words from the API — show them in the UI language */}
+            <span className="flex-1">{type === "TRUE_FALSE" && (o.text === "True" || o.text === "False") ? t(`site.quiz.taking.${o.text === "True" ? "true" : "false"}`) : o.text}</span>
             {selected && <HiCheckCircle className="size-5 shrink-0 text-primary" />}
           </label>
         )
@@ -389,6 +404,7 @@ function QuestionInput({ question, type, value, onChange }) {
 function ScoreRing({ score, passed }) {
   const r = 52
   const c = 2 * Math.PI * r
+  const { t } = useTranslation()
   return (
     <div className="relative grid size-36 shrink-0 place-items-center">
       <svg viewBox="0 0 120 120" className="absolute inset-0 -rotate-90">
@@ -407,7 +423,7 @@ function ScoreRing({ score, passed }) {
       </svg>
       <div className="text-center">
         <p className="text-3xl font-bold tabular-nums tracking-tight">{score}%</p>
-        <p className="text-xs font-medium text-muted-foreground">your score</p>
+        <p className="text-xs font-medium text-muted-foreground">{t("site.quiz.result.yourScore")}</p>
       </div>
     </div>
   )
@@ -415,7 +431,21 @@ function ScoreRing({ score, passed }) {
 
 function Result({ result, canRetry, onRetry }) {
   const { id: courseId } = useParams()
+  const navigate = useNavigate()
   const [retrying, setRetrying] = useState(false)
+  const [claiming, setClaiming] = useState(false)
+  const { t } = useTranslation()
+  // Passing may be the last requirement — issue (or fetch) the certificate and open it
+  const getCertificate = async () => {
+    setClaiming(true)
+    try {
+      const c = await certificateService.claim(courseId)
+      navigate(`/certificates/${c.serialNo}`)
+    } catch (err) {
+      toast.error(t("site.shared.notYet"), getErrorMessage(err, t("site.quiz.toast.certificateFailed")))
+      setClaiming(false)
+    }
+  }
   const passed = result.passed
   const chip = "rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-muted-foreground dark:bg-neutral-800"
 
@@ -433,18 +463,18 @@ function Result({ result, canRetry, onRetry }) {
                 : "bg-rose-500/12 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
             )}
           >
-            {passed ? <Trophy className="size-3.5" /> : <BiSolidXCircle className="size-3.5" />} {passed ? "Passed" : "Not passed"}
+            {passed ? <Trophy className="size-3.5" /> : <BiSolidXCircle className="size-3.5" />} {passed ? t("site.quiz.result.passed") : t("site.quiz.result.notPassed")}
           </span>
-          <h1 className="mt-3 text-2xl font-bold tracking-tight">{passed ? "Great job — you passed!" : "Not quite there yet"}</h1>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight">{passed ? t("site.quiz.result.passedTitle") : t("site.quiz.result.failedTitle")}</h1>
           <p className="mt-1 font-medium text-muted-foreground">
             {passed
-              ? "You reached the pass mark for this course quiz."
-              : `You need ${result.passMark}% to pass. Review the answers below and try again.`}
+              ? t("site.quiz.result.passedText")
+              : t("site.quiz.result.failedText", { passMark: result.passMark })}
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
-            <span className={chip}>{result.correctCount} of {result.totalQuestions} correct</span>
-            <span className={chip}>Pass mark {result.passMark}%</span>
-            <span className={chip}>Attempt #{result.attemptNo}</span>
+            <span className={chip}>{t("site.quiz.result.correctOf", { correct: result.correctCount, total: result.totalQuestions })}</span>
+            <span className={chip}>{t("site.quiz.result.passMark", { passMark: result.passMark })}</span>
+            <span className={chip}>{t("site.quiz.result.attempt", { n: result.attemptNo })}</span>
           </div>
           <div className="mt-5 flex flex-wrap justify-center gap-2 sm:justify-start">
             {canRetry && !passed && (
@@ -456,11 +486,16 @@ function Result({ result, canRetry, onRetry }) {
                 }}
                 disabled={retrying}
               >
-                {retrying ? <Loader2 className="animate-spin" /> : <RotateCcw />} Try again
+                {retrying ? <Loader2 className="animate-spin" /> : <RotateCcw />} {t("site.quiz.result.tryAgain")}
+              </Button>
+            )}
+            {passed && (
+              <Button size="lg" onClick={getCertificate} disabled={claiming}>
+                {claiming ? <Loader2 className="animate-spin" /> : <MdWorkspacePremium className="size-4" />} {t("site.shared.getCertificate")}
               </Button>
             )}
             <Button size="lg" variant="outline" asChild>
-              <Link to={`/courses/${courseId}`}>Back to course</Link>
+              <Link to={`/courses/${courseId}`}>{t("site.quiz.backToCourse")}</Link>
             </Button>
           </div>
         </div>
@@ -469,7 +504,7 @@ function Result({ result, canRetry, onRetry }) {
       {/* Answer review */}
       {result.questions?.length > 0 && (
         <section className={cn(QUIZ_CARD, "overflow-hidden")}>
-          <h2 className="bg-neutral-50 px-6 py-3 text-[15px] font-bold sm:px-8 dark:bg-neutral-800/40">Review your answers</h2>
+          <h2 className="bg-neutral-50 px-6 py-3 text-[15px] font-bold sm:px-8 dark:bg-neutral-800/40">{t("site.quiz.result.reviewTitle")}</h2>
           <ol className="divide-y divide-neutral-200/80 border-t border-neutral-200/80 dark:divide-neutral-800 dark:border-neutral-800">
             {result.questions.map((q, i) => (
               <li key={q.questionId} className="flex gap-4 px-6 py-5 sm:px-8">
@@ -487,18 +522,18 @@ function Result({ result, canRetry, onRetry }) {
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-semibold leading-snug">{q.text}</p>
                     <span className={cn("shrink-0 text-xs font-semibold", q.correct ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                      {q.correct ? "Correct" : "Incorrect"}
+                      {q.correct ? t("site.quiz.result.correct") : t("site.quiz.result.incorrect")}
                     </span>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <AnswerBox
-                      label={q.type === "MULTIPLE_CHOICE" ? "Your answers" : "Your answer"}
-                      text={q.selectedOptionText ?? "No answer"}
+                      label={q.type === "MULTIPLE_CHOICE" ? t("site.quiz.result.yourAnswers") : t("site.quiz.result.yourAnswer")}
+                      text={q.selectedOptionText ?? t("site.quiz.result.noAnswer")}
                       good={q.correct}
                     />
                     {!q.correct && q.correctOptionText && (
                       <AnswerBox
-                        label={q.type === "MULTIPLE_CHOICE" ? "Correct answers" : q.type === "SHORT_ANSWER" ? "Accepted answers" : "Correct answer"}
+                        label={q.type === "MULTIPLE_CHOICE" ? t("site.quiz.result.correctAnswers") : q.type === "SHORT_ANSWER" ? t("site.quiz.result.acceptedAnswers") : t("site.quiz.result.correctAnswer")}
                         text={q.correctOptionText}
                         good
                       />

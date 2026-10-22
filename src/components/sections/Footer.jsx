@@ -1,15 +1,21 @@
+import { Link } from "react-router-dom"
 import { GraduationCap } from "lucide-react"
 import { FaGithub, FaYoutube, FaLinkedin, FaDiscord } from "react-icons/fa"
 import { FaXTwitter } from "react-icons/fa6"
+import { useTranslation } from "react-i18next"
 
+// Column / item keys → site.footer.columns.* and site.footer.links.*
 const columns = {
-  Learn: ["Courses", "Learning paths", "Certificates", "Free resources"],
-  Company: ["About", "Careers", "Blog", "Become a mentor"],
-  Support: ["Help center", "Contact", "Privacy", "Terms"],
+  learn: ["courses", "paths", "certificates", "resources"],
+  company: ["about", "careers", "blog", "mentor"],
+  support: ["help", "contact", "privacy", "terms"],
 }
 const socials = [FaGithub, FaXTwitter, FaYoutube, FaLinkedin, FaDiscord]
+// Footer items that have a page in the app (the rest are placeholders)
+const routes = { courses: "/courses", certificates: "/my-learning?tab=certificates", about: "/about" }
 
 export default function Footer() {
+  const { t } = useTranslation()
   return (
     <footer className="mt-8 border-t border-neutral-200/80 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-5">
@@ -18,10 +24,10 @@ export default function Footer() {
             <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
               <GraduationCap className="size-5" />
             </span>
-            <span className="text-lg">Learnova</span>
+            <span className="text-lg">Autumn</span>
           </a>
           <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-            Practical, project-based learning for developers, analysts and designers.
+            {t("site.footer.tagline")}
           </p>
           <div className="mt-6 flex gap-2">
             {socials.map((Icon, i) => (
@@ -33,17 +39,23 @@ export default function Footer() {
         </div>
         {Object.entries(columns).map(([title, items]) => (
           <div key={title}>
-            <h4 className="mb-4 text-sm font-semibold">{title}</h4>
+            <h4 className="mb-4 text-sm font-semibold">{t(`site.footer.columns.${title}`)}</h4>
             <ul className="space-y-2">
               {items.map((item) => (
-                <li key={item}><a href="#" className="text-sm text-muted-foreground hover:text-foreground">{item}</a></li>
+                <li key={item}>
+                  {routes[item] ? (
+                    <Link to={routes[item]} className="text-sm text-muted-foreground hover:text-foreground">{t(`site.footer.links.${item}`)}</Link>
+                  ) : (
+                    <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t(`site.footer.links.${item}`)}</a>
+                  )}
+                </li>
               ))}
             </ul>
           </div>
         ))}
       </div>
       <div className="border-t border-neutral-200/80 py-6 text-center dark:border-neutral-800 text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Learnova. All rights reserved.
+        {t("site.footer.rights", { year: new Date().getFullYear() })}
       </div>
     </footer>
   )

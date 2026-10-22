@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { MdRateReview } from "react-icons/md"
+import { useTranslation } from "react-i18next"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { EmptyState, ErrorState, LoadingState } from "@/components/course/CourseBits"
@@ -10,6 +12,7 @@ import { reviewService } from "@/services/review.service"
 import { toList } from "@/services/http"
 
 export default function ReviewsTab() {
+  const { t } = useTranslation()
   const { course } = useCourse()
   const { isAdmin } = useRoles()
   const [page, setPage] = useState(0)
@@ -27,7 +30,7 @@ export default function ReviewsTab() {
     <div className="space-y-6">
       <Card>
         <CardContent className="py-2">
-          {summary.loading ? <LoadingState className="py-6" /> : summary.error ? <ErrorState error={summary.error} onRetry={summary.reload} className="py-6" /> : <RatingSummary summary={summary.data} />}
+          {summary.loading ? <LoadingState variant="section" /> : summary.error ? <ErrorState error={summary.error} onRetry={summary.reload} className="py-6" /> : <RatingSummary summary={summary.data} />}
         </CardContent>
       </Card>
 
@@ -36,7 +39,7 @@ export default function ReviewsTab() {
       ) : list.error ? (
         <ErrorState error={list.error} onRetry={list.reload} />
       ) : reviews.length === 0 ? (
-        <EmptyState title="No reviews yet">Enrolled students can rate this course.</EmptyState>
+        <EmptyState icon={MdRateReview} title={t("admin.reviews.empty")}>{t("admin.reviewsTab.emptyHint")}</EmptyState>
       ) : (
         <>
           <ul className="divide-y rounded-xl border glass px-4">
@@ -44,9 +47,9 @@ export default function ReviewsTab() {
           </ul>
           {list.data?.totalPages > 1 && (
             <div className="flex items-center justify-center gap-3">
-              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-              <span className="text-sm text-muted-foreground">Page {page + 1} of {list.data.totalPages}</span>
-              <Button variant="outline" size="sm" disabled={list.data.last} onClick={() => setPage((p) => p + 1)}>Next</Button>
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{t("admin.shared.previous")}</Button>
+              <span className="text-sm text-muted-foreground">{t("admin.shared.pageOf", { page: page + 1, total: list.data.totalPages })}</span>
+              <Button variant="outline" size="sm" disabled={list.data.last} onClick={() => setPage((p) => p + 1)}>{t("admin.shared.next")}</Button>
             </div>
           )}
         </>

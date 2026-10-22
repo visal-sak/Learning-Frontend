@@ -3,6 +3,7 @@ import { ShieldAlert } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/store"
 import { useRoles } from "@/hooks/useRoles"
+import { useTranslation } from "react-i18next"
 
 export function ProtectedRoute() {
   const token = useAuthStore((s) => s.accessToken)
@@ -28,14 +29,15 @@ export function GuestRoute() {
 }
 
 function Forbidden() {
+  const { t } = useTranslation()
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center">
       <span className="grid size-12 place-items-center rounded-full bg-destructive/10 text-destructive">
         <ShieldAlert className="size-6" />
       </span>
-      <h1 className="text-xl font-semibold">You don’t have access to this page</h1>
-      <p className="text-sm text-muted-foreground">Ask an administrator for the right role.</p>
-      <Button asChild variant="outline"><Link to="/">Back home</Link></Button>
+      <h1 className="text-xl font-semibold">{t("site.auth.forbidden.title")}</h1>
+      <p className="text-sm text-muted-foreground">{t("site.auth.forbidden.text")}</p>
+      <Button asChild variant="outline"><Link to="/">{t("site.auth.forbidden.backHome")}</Link></Button>
     </div>
   )
 }

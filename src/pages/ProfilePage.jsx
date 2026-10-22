@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Loader2, Check, KeyRound, Upload } from "lucide-react"
 import { useShallow } from "zustand/react/shallow"
+import { LoadingState } from "@/components/course/CourseBits"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,14 +14,16 @@ import { NativeSelect } from "@/components/ui/native-select"
 import { mediaService } from "@/services/media.service"
 import { userService } from "@/services/user.service"
 import { toast } from "@/lib/toast"
+import { useTranslation } from "react-i18next"
 
 function AvatarUploadButton({ onUploaded }) {
   const input = useRef(null)
   const [busy, setBusy] = useState(false)
+  const { t } = useTranslation()
   return (
     <>
       <Button type="button" variant="outline" disabled={busy} onClick={() => input.current?.click()}>
-        {busy ? <Loader2 className="animate-spin" /> : <Upload />} Upload
+        {busy ? <Loader2 className="animate-spin" /> : <Upload />} {t("site.profile.upload")}
       </Button>
       <input
         ref={input}
@@ -47,6 +50,7 @@ function AvatarUploadButton({ onUploaded }) {
 function ChangePasswordButton() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
+  const { t } = useTranslation()
   const open = async () => {
     setError("")
     setBusy(true)
@@ -54,9 +58,9 @@ function ChangePasswordButton() {
       const res = await userService.passwordChangeLocation()
       const url = res?.url ?? res?.location ?? Object.values(res ?? {})[0]
       if (url) window.open(url, "_blank", "noopener")
-      else setError("No password page configured.")
+      else setError(t("site.profile.noPasswordPage"))
     } catch (err) {
-      setError(getErrorMessage(err, "Couldn’t open the password page"))
+      setError(getErrorMessage(err, t("site.profile.passwordPageFailed")))
     } finally {
       setBusy(false)
     }
@@ -64,7 +68,7 @@ function ChangePasswordButton() {
   return (
     <div className="flex flex-col items-start gap-1">
       <Button type="button" variant="outline" onClick={open} disabled={busy}>
-        {busy ? <Loader2 className="animate-spin" /> : <KeyRound />} Change password
+        {busy ? <Loader2 className="animate-spin" /> : <KeyRound />} {t("site.profile.changePassword")}
       </Button>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
@@ -95,11 +99,13 @@ export default function ProfilePage() {
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const { t } = useTranslation()
 
   useEffect(() => {
     fetchMe()
       .then((u) => setForm(toForm(u)))
-      .catch((err) => setError(getErrorMessage(err, "Couldn’t load your profile")))
+      .catch((err) => setError(getErrorMessage(err, t("site.profile.loadFailed"))))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchMe])
 
   const onChange = (e) => {
@@ -109,16 +115,16 @@ export default function ProfilePage() {
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    if (!form.displayName.trim()) return setError("Display name is required.")
+    if (!form.displayName.trim()) return setError(t("site.profile.nameRequired"))
     setError("")
     setSaving(true)
     try {
       await updateMe(form)
       setSaved(true)
-      toast.success("Profile updated")
+      toast.success(t("site.profile.updated"))
     } catch (err) {
-      setError(getErrorMessage(err, "Couldn’t save changes"))
-      toast.error("Couldn’t save changes", err)
+      setError(getErrorMessage(err, t("site.profile.saveFailed")))
+      toast.error(t("site.profile.saveFailed"), err)
     } finally {
       setSaving(false)
     }
@@ -140,7 +146,7 @@ export default function ProfilePage() {
           </p>
           {roles.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {roles.map((r) => <Badge key={r} variant="secondary">{r}</Badge>)}
+              {roles.map((r) => <Badge key={r} variant="secondary">{t(`site.roles.${r}`, { defaultValue: r })}</Badge>)}
             </div>
           )}
         </div>
@@ -148,43 +154,41 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>This is how other learners and instructors see you.</CardDescription>
+          <CardTitle>{t("site.profile.title")}</CardTitle>
+          <CardDescription>{t("site.profile.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoadingUser && !user ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            </div>
+            <LoadingState variant="section" title={t("site.profile.loading")} />
           ) : (
             <form onSubmit={onSubmit} className="space-y-4">
               <FormError message={error} />
-              <FormField id="displayName" label="Display name" value={form.displayName} onChange={onChange} />
-              <FormField id="headline" label="Headline" placeholder="e.g. Frontend developer & lifelong learner" value={form.headline} onChange={onChange} />
-              <FormField id="bio" label="Bio" as={Textarea} rows={4} value={form.bio} onChange={onChange} />
+              <FormField id="displayName" label={t("site.profile.fields.displayName")} value={form.displayName} onChange={onChange} />
+              <FormField id="headline" label={t("site.profile.fields.headline")} placeholder={t("site.profile.fields.headlinePlaceholder")} value={form.headline} onChange={onChange} />
+              <FormField id="bio" label={t("site.profile.fields.bio")} as={Textarea} rows={4} value={form.bio} onChange={onChange} />
               <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-                <FormField id="avatarUrl" label="Avatar URL" type="url" placeholder="https://…" value={form.avatarUrl} onChange={onChange} />
+                <FormField id="avatarUrl" label={t("site.profile.fields.avatarUrl")} type="url" placeholder="https://…" value={form.avatarUrl} onChange={onChange} />
                 <AvatarUploadButton onUploaded={(uri) => onChange({ target: { name: "avatarUrl", value: uri } })} />
               </div>
-              <FormField id="gender" label="Gender" as={NativeSelect} value={form.gender} onChange={onChange}>
-                <option value="">Prefer not to say</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
+              <FormField id="gender" label={t("site.profile.fields.gender")} as={NativeSelect} value={form.gender} onChange={onChange}>
+                <option value="">{t("site.profile.gender.none")}</option>
+                <option value="MALE">{t("site.profile.gender.MALE")}</option>
+                <option value="FEMALE">{t("site.profile.gender.FEMALE")}</option>
+                <option value="OTHER">{t("site.profile.gender.OTHER")}</option>
               </FormField>
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField id="facebookProfile" label="Facebook" placeholder="https://facebook.com/…" value={form.facebookProfile} onChange={onChange} maxLength={255} />
-                <FormField id="telegramProfile" label="Telegram" placeholder="@username" value={form.telegramProfile} onChange={onChange} maxLength={255} />
+                <FormField id="facebookProfile" label={t("site.profile.fields.facebook")} placeholder="https://facebook.com/…" value={form.facebookProfile} onChange={onChange} maxLength={255} />
+                <FormField id="telegramProfile" label={t("site.profile.fields.telegram")} placeholder="@username" value={form.telegramProfile} onChange={onChange} maxLength={255} />
               </div>
               <div className="flex items-center justify-end gap-3">
                 {saved && (
                   <span className="flex items-center gap-1 text-sm text-primary">
-                    <Check className="size-4" /> Saved
+                    <Check className="size-4" /> {t("site.profile.saved")}
                   </span>
                 )}
                 <Button type="submit" disabled={saving}>
                   {saving && <Loader2 className="animate-spin" />}
-                  Save changes
+                  {t("common.actions.saveChanges")}
                 </Button>
               </div>
             </form>
@@ -194,8 +198,8 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Security</CardTitle>
-          <CardDescription>Your password is managed by the sign-in service.</CardDescription>
+          <CardTitle>{t("site.profile.security")}</CardTitle>
+          <CardDescription>{t("site.profile.securityText")}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChangePasswordButton />

@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useShallow } from "zustand/react/shallow"
-import { BookOpen, LayoutDashboard } from "lucide-react"
+import { IoBook } from "react-icons/io5"
+import { MdDashboard } from "react-icons/md"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ConfirmDialogView } from "@/components/ConfirmDialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -9,6 +10,7 @@ import { toast } from "@/lib/toast"
 import { useAuthStore, selectDisplayUser } from "@/store"
 import { useRoles } from "@/hooks/useRoles"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 function ProfileIcon({ className }) {
   return (
@@ -41,21 +43,22 @@ function UserAvatar({ className, display, textClassName }) {
 export function SignOutDialog({ open, onOpenChange }) {
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   return (
     <ConfirmDialogView
       open={open}
       onOpenChange={onOpenChange}
       icon={SignOutIcon}
-      title="Sign out of your account?"
-      description="This will end your current session."
-      body="You’ll need to sign in again to continue your courses and track your progress."
-      confirmLabel="Sign Out"
+      title={t("site.account.signOut.title")}
+      description={t("site.account.signOut.description")}
+      body={t("site.account.signOut.body")}
+      confirmLabel={t("common.account.signOut")}
       onConfirm={async () => {
         await logout()
         onOpenChange(false)
         navigate("/")
-        toast.success("Signed out", "See you next time!")
+        toast.success(t("site.account.signOut.done"), t("site.account.signOut.doneText"))
       }}
     />
   )
@@ -67,11 +70,12 @@ export default function ProfileDropdown({ align = "end", side = "bottom", trigge
   const navigate = useNavigate()
   const display = useAuthStore(useShallow(selectDisplayUser))
   const { isStaff } = useRoles()
+  const { t } = useTranslation()
 
   const items = [
-    { key: "profile", label: "Profile", icon: ProfileIcon, onSelect: () => navigate("/profile") },
-    { key: "learning", label: "My learning", icon: BookOpen, onSelect: () => navigate("/my-learning") },
-    isStaff && { key: "admin", label: "Dashboard", icon: LayoutDashboard, onSelect: () => navigate("/admin") },
+    { key: "profile", label: t("common.account.profile"), icon: ProfileIcon, onSelect: () => navigate("/profile") },
+    { key: "learning", label: t("common.account.myLearning"), icon: IoBook, onSelect: () => navigate("/my-learning") },
+    isStaff && { key: "admin", label: t("common.account.dashboard"), icon: MdDashboard, onSelect: () => navigate("/admin") },
   ].filter(Boolean)
 
   return (
@@ -80,7 +84,7 @@ export default function ProfileDropdown({ align = "end", side = "bottom", trigge
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label="Account menu"
+            aria-label={t("site.account.menu")}
             className={cn("flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50", triggerClassName)}
           >
             <UserAvatar className="size-8" display={display} textClassName="text-[11px]" />
@@ -92,7 +96,7 @@ export default function ProfileDropdown({ align = "end", side = "bottom", trigge
             <div className="flex items-center gap-3">
               <UserAvatar className="size-8" display={display} textClassName="text-[11px]" />
               <div className="flex min-w-0 flex-col space-y-1">
-                <p className="truncate text-xs leading-none font-semibold">{display.name || "User"}</p>
+                <p className="truncate text-xs leading-none font-semibold">{display.name || t("site.account.user")}</p>
                 <p className="truncate text-xs leading-none text-muted-foreground">{display.email}</p>
               </div>
             </div>
@@ -116,7 +120,7 @@ export default function ProfileDropdown({ align = "end", side = "bottom", trigge
               className="gap-2.5 py-2 pr-2.5 pl-3.5 text-[#EB4747] focus:bg-[#D73535] focus:text-white"
             >
               <SignOutIcon className="size-4" />
-              <span className="flex-1 text-[13px] font-medium">Sign Out</span>
+              <span className="flex-1 text-[13px] font-medium">{t("common.account.signOut")}</span>
             </DropdownMenuItem>
           </div>
         </DropdownMenuContent>

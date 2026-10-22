@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store"
 import { courseService } from "@/services/course.service"
 import { reviewService } from "@/services/review.service"
 import { toList } from "@/services/http"
+import { useTranslation } from "react-i18next"
 
 const MAX = 3
 
@@ -38,6 +39,7 @@ export default function Testimonials() {
   // Review endpoints currently require a login — refetch when the session changes
   const isAuthed = useAuthStore((s) => !!s.accessToken)
   const { data: reviews, loading } = useFetch(loadTopReviews, [isAuthed])
+  const { t } = useTranslation()
 
   // No real reviews to show (or not allowed to read them) → hide rather than show placeholders
   if (!loading && !reviews?.length) return null
@@ -45,11 +47,11 @@ export default function Testimonials() {
   return (
     <section id="reviews" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
       <div className="mb-10 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Loved by learners</h2>
-        <p className="mt-2 text-muted-foreground">Real reviews from students on our courses.</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t("site.home.testimonials.title")}</h2>
+        <p className="mt-2 text-muted-foreground">{t("site.home.testimonials.subtitle")}</p>
       </div>
       {loading ? (
-        <LoadingState />
+        <LoadingState variant="section" />
       ) : (
         // centred row: 1–2 reviews sit in the middle instead of hugging the left column
         <div className="flex flex-wrap justify-center gap-6">
@@ -60,7 +62,7 @@ export default function Testimonials() {
               className="w-full md:w-[calc((100%-3rem)/3)]"
               context={
                 <Link to={`/courses/${r.courseId}`} className="hover:text-primary hover:underline">
-                  on {r.courseTitle}
+                  {t("site.home.testimonials.on", { course: r.courseTitle })}
                 </Link>
               }
             />

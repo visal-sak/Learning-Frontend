@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { MdGroups } from "react-icons/md"
+import { useTranslation } from "react-i18next"
 import { Search, UserMinus, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,6 +17,7 @@ import { confirm } from "@/store/confirm.store"
 import { toast } from "@/lib/toast"
 
 export default function StudentsTab() {
+  const { t } = useTranslation()
   const { course } = useCourse()
   const { data, loading, error, reload } = useFetch(() => enrollmentService.students(course.id), [course.id])
   const [q, setQ] = useState("")
@@ -24,10 +27,10 @@ export default function StudentsTab() {
 
   const remove = async (s) => {
     const ok = await confirm({
-      title: `Remove ${s.displayName}?`,
-      description: "They’ll be unenrolled from this course.",
-      body: "Their lesson progress and quiz results for this course will be lost.",
-      confirmLabel: "Remove student",
+      title: t("admin.students.removeDialog.title", { name: s.displayName }),
+      description: t("admin.students.removeDialog.description"),
+      body: t("admin.students.removeDialog.body"),
+      confirmLabel: t("admin.students.removeStudent"),
     })
     if (!ok) return
     setActionError("")
@@ -35,10 +38,10 @@ export default function StudentsTab() {
     try {
       await enrollmentService.removeStudent(course.id, s.userId)
       reload()
-      toast.success("Student removed", s.displayName)
+      toast.success(t("admin.students.toast.removed"), s.displayName)
     } catch (err) {
-      setActionError(getErrorMessage(err, "Couldn’t remove student"))
-      toast.error("Couldn’t remove student", err)
+      setActionError(getErrorMessage(err, t("admin.students.toast.removeFailed")))
+      toast.error(t("admin.students.toast.removeFailed"), err)
     } finally {
       setBusy(null)
     }
@@ -50,27 +53,27 @@ export default function StudentsTab() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <p className="text-sm text-muted-foreground">{data.length} enrolled student{data.length === 1 ? "" : "s"}</p>
+        <p className="text-sm text-muted-foreground">{t("admin.students.enrolledCount", { count: data.length })}</p>
         <div className="relative sm:w-64">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search students…" className="pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("admin.students.search")} className="pl-9" />
         </div>
       </div>
       <FormError message={actionError} />
 
       {students.length === 0 ? (
-        <EmptyState title={data.length ? "No students match" : "No students yet"}>
-          {!data.length && "Students appear here once they enroll in a published course."}
+        <EmptyState icon={MdGroups} title={data.length ? t("admin.students.noMatch") : t("admin.students.empty")}>
+          {!data.length && t("admin.students.emptyHint")}
         </EmptyState>
       ) : (
         <div className="overflow-x-auto rounded-xl border glass">
           <table className="w-full text-sm">
             <thead className="border-b text-left text-xs text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 font-medium">Student</th>
-                <th className="px-4 py-3 font-medium">Progress</th>
-                <th className="hidden px-4 py-3 font-medium md:table-cell">Enrolled</th>
-                <th className="hidden px-4 py-3 font-medium md:table-cell">Last active</th>
+                <th className="px-4 py-3 font-medium">{t("admin.students.columns.student")}</th>
+                <th className="px-4 py-3 font-medium">{t("admin.students.columns.progress")}</th>
+                <th className="hidden px-4 py-3 font-medium md:table-cell">{t("admin.students.columns.enrolled")}</th>
+                <th className="hidden px-4 py-3 font-medium md:table-cell">{t("admin.students.columns.lastActive")}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -99,7 +102,7 @@ export default function StudentsTab() {
                   <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">{formatDate(s.enrolledAt)}</td>
                   <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">{formatDate(s.lastAccessedAt) || "—"}</td>
                   <td className="px-4 py-3 text-right">
-                    <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" disabled={busy === s.userId} onClick={() => remove(s)} aria-label="Remove student" title="Remove student">
+                    <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" disabled={busy === s.userId} onClick={() => remove(s)} aria-label={t("admin.students.removeStudent")} title={t("admin.students.removeStudent")}>
                       {busy === s.userId ? <Loader2 className="animate-spin" /> : <UserMinus />}
                     </Button>
                   </td>

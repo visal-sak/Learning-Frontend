@@ -1,5 +1,7 @@
 import { useRef, useState } from "react"
+import { MdPermMedia } from "react-icons/md"
 import { Upload, Copy, Check, Loader2, FileVideo, FileText, FileArchive } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { BiSolidTrash } from "react-icons/bi"
 import { IoEyeOff } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
@@ -27,6 +29,7 @@ const kindTag = (m) =>
         : "bg-neutral-500/12 text-neutral-700 dark:bg-neutral-500/20 dark:text-neutral-300"
 
 export default function MediaPage() {
+  const { t } = useTranslation()
   const [page, setPage] = useState(0)
   const { data, loading, error, reload } = useFetch(() => mediaService.list({ page, size: 24 }), [page])
   const items = toList(data)
@@ -45,10 +48,10 @@ export default function MediaPage() {
       else await mediaService.uploadMany(files)
       setPage(0)
       reload()
-      toast.success(files.length === 1 ? "File uploaded" : `${files.length} files uploaded`)
+      toast.success(t("admin.media.toast.uploaded", { count: files.length }))
     } catch (err) {
-      setActionError(getErrorMessage(err, "Upload failed"))
-      toast.error("Upload failed", err)
+      setActionError(getErrorMessage(err, t("admin.ui.uploadFailed")))
+      toast.error(t("admin.ui.uploadFailed"), err)
     } finally {
       setUploading(false)
       if (input.current) input.current.value = ""
@@ -63,8 +66,8 @@ export default function MediaPage() {
       reload()
       if (successMsg) toast.success(successMsg)
     } catch (err) {
-      setActionError(getErrorMessage(err, "Action failed"))
-      toast.error("Action failed", err)
+      setActionError(getErrorMessage(err, t("admin.shared.actionFailed")))
+      toast.error(t("admin.shared.actionFailed"), err)
     } finally {
       setBusy(null)
     }
@@ -80,9 +83,9 @@ export default function MediaPage() {
 
   return (
     <>
-      <PageHeader title="Media library" description="Images, videos and files you can use in courses and lessons.">
+      <PageHeader title={t("admin.media.title")} description={t("admin.media.description")}>
         <Button onClick={() => input.current?.click()} disabled={uploading}>
-          {uploading ? <Loader2 className="animate-spin" /> : <Upload />} Upload files
+          {uploading ? <Loader2 className="animate-spin" /> : <Upload />} {t("admin.media.upload")}
         </Button>
         <input ref={input} type="file" multiple hidden onChange={(e) => upload(e.target.files)} />
       </PageHeader>
@@ -94,7 +97,7 @@ export default function MediaPage() {
       ) : error ? (
         <ErrorState error={error} onRetry={reload} />
       ) : items.length === 0 ? (
-        <EmptyState title="No media yet">Upload thumbnails, lesson videos or attachments.</EmptyState>
+        <EmptyState icon={MdPermMedia} title={t("admin.media.empty")}>{t("admin.media.emptyHint")}</EmptyState>
       ) : (
         <>
           <DataTable
@@ -104,7 +107,7 @@ export default function MediaPage() {
             columns={[
               {
                 key: "file",
-                label: "File",
+                label: t("admin.media.columns.file"),
                 render: (m) => (
                   <a href={m.uri} target="_blank" rel="noreferrer" className="group flex min-w-0 items-center gap-3">
                     <span className="grid h-10 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-[#f5f5f5] dark:bg-neutral-800">
@@ -124,12 +127,12 @@ export default function MediaPage() {
               },
               {
                 key: "type",
-                label: "Type",
-                render: (m) => <Tag className={cn("uppercase", kindTag(m))}>{m.extension ?? "file"}</Tag>,
+                label: t("admin.media.columns.type"),
+                render: (m) => <Tag className={cn("uppercase", kindTag(m))}>{m.extension ?? t("admin.media.file")}</Tag>,
               },
               {
                 key: "size",
-                label: "Size",
+                label: t("admin.media.columns.size"),
                 nowrap: true,
                 render: (m) => (
                   <span className="tabular-nums text-muted-foreground">{m.size != null ? `${Number(m.size).toFixed(1)} ${m.measurement ?? ""}` : "—"}</span>
@@ -137,21 +140,21 @@ export default function MediaPage() {
               },
               {
                 key: "actions",
-                label: "Actions",
+                label: t("admin.shared.actions"),
                 align: "right",
                 render: (m) => (
                   <div className="flex items-center justify-end gap-1.5">
                     <Button size="sm" variant="bordered" onClick={() => copy(m)}>
-                      {copied === m.name ? <Check /> : <Copy />} {copied === m.name ? "Copied" : "Copy URL"}
+                      {copied === m.name ? <Check /> : <Copy />} {copied === m.name ? t("common.actions.copied") : t("admin.media.copyUrl")}
                     </Button>
                     <Button
                       size="icon"
                       variant="bordered"
                       className="size-8"
-                      title="Mark as draft"
-                      aria-label="Mark as draft"
+                      title={t("admin.media.markDraft")}
+                      aria-label={t("admin.media.markDraft")}
                       disabled={busy === m.name}
-                      onClick={() => act(m, () => mediaService.markDraft(m.name), "Marked as draft")}
+                      onClick={() => act(m, () => mediaService.markDraft(m.name), t("admin.media.toast.markedDraft"))}
                     >
                       <IoEyeOff className="size-4" />
                     </Button>
@@ -159,17 +162,17 @@ export default function MediaPage() {
                       size="icon"
                       variant="bordered"
                       className="size-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10"
-                      title="Delete"
-                      aria-label="Delete"
+                      title={t("common.actions.delete")}
+                      aria-label={t("common.actions.delete")}
                       disabled={busy === m.name}
                       onClick={async () => {
                         const ok = await confirm({
-                          title: "Delete this file?",
+                          title: t("admin.media.deleteDialog.title"),
                           description: m.name,
-                          body: "Anything that uses this file’s URL (thumbnails, lesson videos) will stop showing it.",
-                          confirmLabel: "Delete file",
+                          body: t("admin.media.deleteDialog.body"),
+                          confirmLabel: t("admin.media.deleteDialog.confirm"),
                         })
-                        if (ok) act(m, () => mediaService.remove(m.name), "File deleted")
+                        if (ok) act(m, () => mediaService.remove(m.name), t("admin.media.toast.deleted"))
                       }}
                     >
                       {busy === m.name ? <Loader2 className="animate-spin" /> : <BiSolidTrash className="size-4" />}
@@ -181,9 +184,9 @@ export default function MediaPage() {
           />
           {data?.totalPages > 1 && (
             <div className="mt-6 flex items-center justify-center gap-3">
-              <Button variant="bordered" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-              <span className="text-sm text-muted-foreground">Page {page + 1} of {data.totalPages}</span>
-              <Button variant="bordered" size="sm" disabled={data.last} onClick={() => setPage((p) => p + 1)}>Next</Button>
+              <Button variant="bordered" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{t("admin.shared.previous")}</Button>
+              <span className="text-sm text-muted-foreground">{t("admin.shared.pageOf", { page: page + 1, total: data.totalPages })}</span>
+              <Button variant="bordered" size="sm" disabled={data.last} onClick={() => setPage((p) => p + 1)}>{t("admin.shared.next")}</Button>
             </div>
           )}
         </>

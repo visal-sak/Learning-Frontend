@@ -8,18 +8,20 @@ import { useAuthStore } from "@/store"
 import { getErrorMessage } from "@/lib/api"
 import { env, isManualRedirect } from "@/config/env"
 import KeycloakRedirect from "@/components/auth/KeycloakRedirect"
+import { useTranslation } from "react-i18next"
 
 const empty = { username: "", email: "", firstName: "", lastName: "", password: "", confirmedPassword: "" }
 
-function validate(f) {
+// `t` translates the messages (site.auth.validation.*)
+function validate(f, t) {
   const e = {}
-  if (!f.firstName.trim()) e.firstName = "Required"
-  if (!f.lastName.trim()) e.lastName = "Required"
-  if (!f.username.trim()) e.username = "Required"
-  else if (/\s/.test(f.username)) e.username = "No spaces allowed"
-  if (!/^\S+@\S+\.\S+$/.test(f.email)) e.email = "Enter a valid email"
-  if (f.password.length < 5) e.password = "At least 5 characters"
-  if (f.confirmedPassword !== f.password) e.confirmedPassword = "Passwords don’t match"
+  if (!f.firstName.trim()) e.firstName = t("site.auth.validation.required")
+  if (!f.lastName.trim()) e.lastName = t("site.auth.validation.required")
+  if (!f.username.trim()) e.username = t("site.auth.validation.required")
+  else if (/\s/.test(f.username)) e.username = t("site.auth.validation.noSpaces")
+  if (!/^\S+@\S+\.\S+$/.test(f.email)) e.email = t("site.auth.validation.email")
+  if (f.password.length < 5) e.password = t("site.auth.validation.passwordLength")
+  if (f.confirmedPassword !== f.password) e.confirmedPassword = t("site.auth.validation.passwordMatch")
   return e
 }
 
@@ -27,6 +29,7 @@ function validate(f) {
 function CustomRegisterPage() {
   const register = useAuthStore((s) => s.register)
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [form, setForm] = useState(empty)
   const [errors, setErrors] = useState({})
   const [error, setError] = useState("")
@@ -41,7 +44,7 @@ function CustomRegisterPage() {
   const onSubmit = async (e) => {
     e.preventDefault()
     setError("")
-    const v = validate(form)
+    const v = validate(form, t)
     setErrors(v)
     if (Object.keys(v).length) return
     setLoading(true)
@@ -56,7 +59,7 @@ function CustomRegisterPage() {
         navigate("/login", { replace: true })
         return
       }
-      setError(getErrorMessage(err, "Registration failed"))
+      setError(getErrorMessage(err, t("site.auth.errors.registerFailed")))
     } finally {
       setLoading(false)
     }
@@ -64,28 +67,28 @@ function CustomRegisterPage() {
 
   return (
     <AuthLayout
-      title="Create your account"
-      subtitle="Start learning in under a minute."
+      title={t("site.auth.register.title")}
+      subtitle={t("site.auth.register.subtitle")}
       footer={
         <>
-          Already have an account?{" "}
-          <Link to="/login" className="font-medium text-primary hover:underline">Log in</Link>
+          {t("site.auth.register.haveAccount")}{" "}
+          <Link to="/login" className="font-medium text-primary hover:underline">{t("common.nav.logIn")}</Link>
         </>
       }
     >
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <FormError message={error} />
         <div className="grid grid-cols-2 gap-3">
-          <FormField id="firstName" label="First name" autoComplete="given-name" value={form.firstName} onChange={onChange} error={errors.firstName} />
-          <FormField id="lastName" label="Last name" autoComplete="family-name" value={form.lastName} onChange={onChange} error={errors.lastName} />
+          <FormField id="firstName" label={t("site.auth.fields.firstName")} autoComplete="given-name" value={form.firstName} onChange={onChange} error={errors.firstName} />
+          <FormField id="lastName" label={t("site.auth.fields.lastName")} autoComplete="family-name" value={form.lastName} onChange={onChange} error={errors.lastName} />
         </div>
-        <FormField id="username" label="Username" autoComplete="username" value={form.username} onChange={onChange} error={errors.username} />
-        <FormField id="email" label="Email" type="email" autoComplete="email" value={form.email} onChange={onChange} error={errors.email} />
-        <FormField id="password" label="Password" type="password" autoComplete="new-password" value={form.password} onChange={onChange} error={errors.password} />
-        <FormField id="confirmedPassword" label="Confirm password" type="password" autoComplete="new-password" value={form.confirmedPassword} onChange={onChange} error={errors.confirmedPassword} />
+        <FormField id="username" label={t("site.auth.fields.username")} autoComplete="username" value={form.username} onChange={onChange} error={errors.username} />
+        <FormField id="email" label={t("site.auth.fields.email")} type="email" autoComplete="email" value={form.email} onChange={onChange} error={errors.email} />
+        <FormField id="password" label={t("site.auth.fields.password")} type="password" autoComplete="new-password" value={form.password} onChange={onChange} error={errors.password} />
+        <FormField id="confirmedPassword" label={t("site.auth.fields.confirmPassword")} type="password" autoComplete="new-password" value={form.confirmedPassword} onChange={onChange} error={errors.confirmedPassword} />
         <Button type="submit" className="w-full" disabled={loading}>
           {loading && <Loader2 className="animate-spin" />}
-          Create account
+          {t("site.auth.register.submit")}
         </Button>
       </form>
     </AuthLayout>
