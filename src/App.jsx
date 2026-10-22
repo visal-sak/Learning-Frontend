@@ -30,6 +30,7 @@ const CurriculumTab = lazy(() => import("@/pages/admin/course/CurriculumTab"))
 const QuizTab = lazy(() => import("@/pages/admin/course/QuizTab"))
 const StudentsTab = lazy(() => import("@/pages/admin/course/StudentsTab"))
 const ReviewsTab = lazy(() => import("@/pages/admin/course/ReviewsTab"))
+const AiAccessTab = lazy(() => import("@/pages/admin/course/AiAccessTab"))
 const ReviewQueuePage = lazy(() => import("@/pages/admin/ReviewQueuePage"))
 const CategoriesPage = lazy(() => import("@/pages/admin/CategoriesPage"))
 const InstructorReviewsPage = lazy(() => import("@/pages/admin/InstructorReviewsPage"))
@@ -89,6 +90,7 @@ export default function App() {
             <Route path="quiz" element={<QuizTab />} />
             <Route path="students" element={<StudentsTab />} />
             <Route path="reviews" element={<ReviewsTab />} />
+            <Route path="ai-access" element={<AiAccessTab />} />
           </Route>
           <Route path="reviews" element={<InstructorReviewsPage />} />
           <Route path="media" element={<MediaPage />} />

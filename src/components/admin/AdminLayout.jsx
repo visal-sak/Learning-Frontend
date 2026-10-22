@@ -1,3 +1,6 @@
+import { MdAdminPanelSettings, MdSchool } from "react-icons/md"
+import { CountBadge } from "@/components/ui/count-badge"
+import { cn } from "@/lib/utils"
 import { Suspense, useEffect, useState } from "react"
 import { WiDirectionLeft } from "react-icons/wi"
 import { Link, Outlet, useLocation } from "react-router-dom"
@@ -14,6 +17,7 @@ import { RiStackLine } from "react-icons/ri"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb"
 import LanguageSwitch from "@/components/LanguageSwitch"
+import NotificationBell from "@/components/NotificationBell"
 import ProfileDropdown, { SignOutDialog } from "@/components/ProfileDropdown"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -61,12 +65,8 @@ function useNavSections() {
   ].filter(Boolean)
 }
 
-function CountBadge({ children }) {
-  return (
-    <span className="rounded-md bg-[color-mix(in_srgb,var(--foreground)_7%,transparent)] px-1.5 py-0.5 text-[10.5px] font-medium leading-none text-muted-foreground tabular-nums">
-      {children}
-    </span>
-  )
+function SidebarCount({ children }) {
+  return <CountBadge className="bg-rose-500/12 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">{children}</CountBadge>
 }
 
 function BrandMark() {
@@ -81,7 +81,16 @@ function BrandMark() {
       {!collapsed && (
         <>
           <span className="truncate text-[13.5px] font-semibold leading-none">Autumn</span>
-          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {/* role pill: navy for admins, violet for instructors */}
+          <span
+            className={cn(
+              "inline-flex h-5 shrink-0 items-center gap-1 rounded-full pl-1.5 pr-2 text-[11px] font-semibold leading-none ring-1 ring-inset",
+              isAdmin
+                ? "bg-primary/10 text-primary ring-primary/15 dark:bg-primary/20"
+                : "bg-violet-500/10 text-violet-700 ring-violet-500/20 dark:text-violet-300"
+            )}
+          >
+            {isAdmin ? <MdAdminPanelSettings className="size-3.5" /> : <MdSchool className="size-3.5" />}
             {isAdmin ? t("admin.roles.admin") : t("admin.roles.instructor")}
           </span>
         </>
@@ -147,7 +156,7 @@ function AdminSidebar({ variant, collapsed, onCollapsedChange, onNavigate, width
                 to={item.to}
                 icon={icon(item.icon, item.iconSize)}
                 active={isActive(item)}
-                badge={item.badge ? <CountBadge>{item.badge}</CountBadge> : undefined}
+                badge={item.badge ? <SidebarCount>{item.badge}</SidebarCount> : undefined}
                 onClick={onNavigate}
               >
                 {item.label}
@@ -227,6 +236,7 @@ export default function AdminLayout() {
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={t("common.theme.toggle")}>
             {dark ? <Sun /> : <Moon />}
           </Button>
+          <NotificationBell />
           <ProfileDropdown />
         </header>
         {/* Full-width content, 20px padding on every side */}

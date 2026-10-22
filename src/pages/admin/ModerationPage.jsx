@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { CountBadge } from "@/components/ui/count-badge"
 import { MdVerifiedUser } from "react-icons/md"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
@@ -38,19 +39,19 @@ export default function ModerationPage() {
     <>
       <PageHeader title={t("admin.moderation.title")} description={t("admin.moderation.description")} />
 
-      <div className="mb-4 flex w-fit gap-1 rounded-xl border border-neutral-200/80 bg-neutral-100/70 p-1 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="mb-4 flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl border border-neutral-200/80 bg-neutral-100/70 p-1 dark:border-neutral-800 dark:bg-neutral-900">
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setStatus(tab)}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+              "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
               status === tab && "bg-white text-foreground shadow-sm dark:bg-neutral-800"
             )}
           >
             {t(`admin.moderation.tabs.${tab}`)}
             {status === tab && !loading && (
-              <span className="ml-1.5 rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground tabular-nums">{items.length}</span>
+              <CountBadge active>{items.length}</CountBadge>
             )}
           </button>
         ))}

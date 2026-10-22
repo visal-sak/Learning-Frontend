@@ -1,6 +1,6 @@
 // Lesson player: notes, AI tutor, bookmarks
 export default {
-  tools: { notes: "Notes", tutor: "AI tutor" },
+  tools: { notes: "Notes", tutor: "Bunny AI" },
   bookmark: { add: "Bookmark lesson", remove: "Remove bookmark", added: "Lesson bookmarked", removed: "Bookmark removed", signIn: "Log in to bookmark lessons" },
   notes: {
     title: "My notes",
@@ -105,7 +105,25 @@ export default {
     addAnswer: "Add answer",
     explanationPh: "Explanation shown after answering (optional)",
   },
+  ai: {
+    extraForLesson: "+{{count}} extra for this lesson",
+    bunny: "Bunny AI",
+    thinking: "Bunny is thinking…",
+    hintN: "Hint {{n}}",
+    askHint: "Ask Bunny for a hint",
+    noHints: "No hints left",
+    hintsLeft: "{{left}} of {{total}} hints left",
+    penalty: "−{{value}} question per hint",
+    hintFailed: "Couldn’t get a hint",
+    explain: "Ask Bunny to explain my answer",
+    explaining: "Thinking…",
+    explainTitle: "Explains",
+    explainFailed: "Couldn’t get an explanation",
+  },
   tutor: {
+    questionsLeft: "{{left}}/{{total}} questions left",
+    noQuestions: "You’ve used all {{total}} Bunny AI questions for this lesson.",
+    placeholderBunny: "Ask Bunny about this lesson…",
     title: "AI tutor",
     subtitle: "Ask anything about this lesson. Answers can be wrong — check the lesson too.",
     placeholder: "Ask about this lesson…",

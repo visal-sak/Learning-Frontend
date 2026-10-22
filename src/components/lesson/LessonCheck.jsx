@@ -9,6 +9,7 @@ import { lessonCheckService } from "@/services/lessonCheck.service"
 import { getErrorMessage } from "@/lib/api"
 import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
+import { AiExplain, AiHint, useAiHelper } from "./AiHelper"
 
 const LETTERS = "ABCDEF"
 
@@ -26,6 +27,7 @@ export default function LessonCheck({ lessonId, item = false, onCompleted }) {
   const [step, setStep] = useState(0)
   const [result, setResult] = useState(null)
   const [busy, setBusy] = useState(false)
+  const helper = useAiHelper("lesson-checks", data?.questions?.length ? lessonId : null)
 
   const questions = data?.questions ?? []
   if (loading || !questions.length) return null
@@ -52,6 +54,7 @@ export default function LessonCheck({ lessonId, item = false, onCompleted }) {
       })
       const res = await lessonCheckService.submit(lessonId, payload)
       setResult(res)
+      helper.reload() // the next attempt starts with a fresh set of hints
       if (res.progress) onCompleted?.(res.progress)
     } catch (err) {
       toast.error(t("common.states.error"), getErrorMessage(err))
@@ -110,7 +113,7 @@ export default function LessonCheck({ lessonId, item = false, onCompleted }) {
       </header>
 
       {result ? (
-        <Results questions={questions} answers={answers} result={result} item={item} passMark={passMark} requirePass={data.requirePass} onRetry={retry} />
+        <Results lessonId={lessonId} helper={helper} questions={questions} answers={answers} result={result} item={item} passMark={passMark} requirePass={data.requirePass} onRetry={retry} />
       ) : (
         <>
           {/* one question */}
@@ -167,6 +170,14 @@ export default function LessonCheck({ lessonId, item = false, onCompleted }) {
                 })}
               </div>
             )}
+
+            <AiHint
+              scope="lesson-checks"
+              id={lessonId}
+              questionId={q.id}
+              helper={helper}
+              answer={q.type === "SHORT_ANSWER" ? { text: answers[q.id] ?? "" } : { selected: answers[q.id] == null ? [] : [].concat(answers[q.id]) }}
+            />
           </div>
 
           {/* navigation */}
@@ -192,7 +203,7 @@ export default function LessonCheck({ lessonId, item = false, onCompleted }) {
 }
 
 // Score ring + every question with what was right, and why
-function Results({ questions, answers, result, item, passMark, requirePass, onRetry }) {
+function Results({ lessonId, helper, questions, answers, result, item, passMark, requirePass, onRetry }) {
   const { t } = useTranslation()
   const byId = Object.fromEntries((result.results ?? []).map((r) => [r.questionId, r]))
   const pct = result.scorePercent ?? Math.round((result.correct / result.total) * 100)
@@ -285,6 +296,15 @@ function Results({ questions, answers, result, item, passMark, requirePass, onRe
                   <span>{r.explanation}</span>
                 </p>
               )}
+              <div className="ml-9">
+                <AiExplain
+                  scope="lesson-checks"
+                  id={lessonId}
+                  questionId={q.id}
+                  helper={helper}
+                  answer={q.type === "SHORT_ANSWER" ? { text: v ?? "" } : { selected: v == null ? [] : [].concat(v) }}
+                />
+              </div>
             </li>
           )
         })}

@@ -28,6 +28,7 @@ const tabs = [
   { to: "quiz", key: "quiz" },
   { to: "students", key: "students" },
   { to: "reviews", key: "reviews" },
+  { to: "ai-access", key: "aiAccess" },
 ]
 
 const CARD = "rounded-2xl border border-neutral-200/80 bg-white dark:border-neutral-800 dark:bg-neutral-900"

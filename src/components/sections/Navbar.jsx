@@ -9,6 +9,7 @@ import { useAuthStore, useThemeStore } from "@/store"
 import { useRoles } from "@/hooks/useRoles"
 import { useTranslation } from "react-i18next"
 import LanguageSwitch from "@/components/LanguageSwitch"
+import NotificationBell from "@/components/NotificationBell"
 
 function useNavLinks() {
   const isAuthed = useAuthStore((s) => !!s.accessToken)
@@ -91,6 +92,7 @@ export default function Navbar() {
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={t("common.theme.toggle")}>
             {dark ? <Sun /> : <Moon />}
           </Button>
+          {isAuthed && <NotificationBell />}
           {isAuthed ? (
             <ProfileDropdown triggerClassName="ml-1" />
           ) : (

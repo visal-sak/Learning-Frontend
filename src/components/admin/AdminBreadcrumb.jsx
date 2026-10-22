@@ -15,6 +15,7 @@ const LABELS = {
   quiz: "admin.breadcrumb.quiz",
   students: "admin.breadcrumb.students",
   assessments: "admin.nav.assessments",
+  "ai-access": "admin.courseEditor.tabs.aiAccess",
   certificates: "admin.nav.certificates",
   moderation: "admin.nav.moderation",
 }

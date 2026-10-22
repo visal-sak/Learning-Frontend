@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { CountBadge } from "@/components/ui/count-badge"
 import { MdLibraryBooks } from "react-icons/md"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
@@ -73,19 +74,12 @@ export default function CoursesPage() {
             key={s}
             onClick={() => setFilter(s)}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+              "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
               filter === s && "bg-white text-foreground shadow-sm dark:bg-neutral-800"
             )}
           >
             {s === "ALL" ? t("admin.courses.all") : t(`admin.courseStatus.${s}`, { defaultValue: COURSE_STATUS[s].label })}
-            <span
-              className={cn(
-                "rounded-full px-1.5 text-[11px] font-semibold tabular-nums",
-                filter === s ? "bg-primary text-primary-foreground" : "bg-neutral-200 text-muted-foreground dark:bg-neutral-800"
-              )}
-            >
-              {s === "ALL" ? all.length : counts[s] ?? 0}
-            </span>
+            <CountBadge active={filter === s}>{s === "ALL" ? all.length : counts[s] ?? 0}</CountBadge>
           </button>
         ))}
       </div>

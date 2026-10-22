@@ -1,6 +1,6 @@
 // Lesson player: notes, AI tutor, bookmarks (Khmer) — keys mirror ../en/learn.js
 export default {
-  tools: { notes: "កំណត់ចំណាំ", tutor: "គ្រូជំនួយ AI" },
+  tools: { notes: "កំណត់ចំណាំ", tutor: "Bunny AI" },
   bookmark: { add: "ចំណាំមេរៀន", remove: "ដកការចំណាំ", added: "បានចំណាំមេរៀន", removed: "បានដកការចំណាំ", signIn: "ចូលគណនីដើម្បីចំណាំមេរៀន" },
   notes: {
     title: "កំណត់ចំណាំរបស់ខ្ញុំ",
@@ -105,7 +105,25 @@ export default {
     addAnswer: "បន្ថែមចម្លើយ",
     explanationPh: "ការពន្យល់ដែលបង្ហាញបន្ទាប់ពីឆ្លើយ (ជម្រើស)",
   },
+  ai: {
+    extraForLesson: "+{{count}} បន្ថែមសម្រាប់មេរៀននេះ",
+    bunny: "Bunny AI",
+    thinking: "Bunny កំពុងគិត…",
+    hintN: "គន្លឹះទី {{n}}",
+    askHint: "សុំគន្លឹះពី Bunny",
+    noHints: "អស់គន្លឹះហើយ",
+    hintsLeft: "នៅសល់គន្លឹះ {{left}} ក្នុងចំណោម {{total}}",
+    penalty: "−{{value}} សំណួរក្នុងមួយគន្លឹះ",
+    hintFailed: "មិនអាចទទួលគន្លឹះបានទេ",
+    explain: "សុំ Bunny ពន្យល់ចម្លើយរបស់ខ្ញុំ",
+    explaining: "កំពុងគិត…",
+    explainTitle: "ពន្យល់",
+    explainFailed: "មិនអាចទទួលការពន្យល់បានទេ",
+  },
   tutor: {
+    questionsLeft: "នៅសល់ {{left}}/{{total}} សំណួរ",
+    noQuestions: "អ្នកបានប្រើសំណួរ Bunny AI ទាំង {{total}} សម្រាប់មេរៀននេះហើយ។",
+    placeholderBunny: "សួរ Bunny អំពីមេរៀននេះ…",
     title: "គ្រូជំនួយ AI",
     subtitle: "សួរអ្វីក៏បានអំពីមេរៀននេះ។ ចម្លើយអាចខុស — សូមពិនិត្យមេរៀនផងដែរ។",
     placeholder: "សួរអំពីមេរៀននេះ…",

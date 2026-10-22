@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { CountBadge } from "@/components/ui/count-badge"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { Search, Download, ExternalLink, Link2, Check } from "lucide-react"
@@ -89,20 +90,18 @@ export default function CertificatesPage() {
       </div>
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-fit gap-1 rounded-xl border border-neutral-200/80 bg-neutral-100/70 p-1 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl border border-neutral-200/80 bg-neutral-100/70 p-1 dark:border-neutral-800 dark:bg-neutral-900">
           {TABS.map((x) => (
             <button
               key={x}
               onClick={() => setTab(x)}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
                 tab === x && "bg-white text-foreground shadow-sm dark:bg-neutral-800"
               )}
             >
               {t(`admin.certificates.tabs.${x}`)}
-              <span className={cn("ml-1.5 rounded-full px-1.5 text-[11px] font-semibold tabular-nums", tab === x ? "bg-primary text-primary-foreground" : "bg-neutral-200 dark:bg-neutral-700")}>
-                {counts[x]}
-              </span>
+              <CountBadge active={tab === x}>{counts[x]}</CountBadge>
             </button>
           ))}
         </div>

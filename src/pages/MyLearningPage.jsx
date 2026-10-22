@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { CountBadge } from "@/components/ui/count-badge"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { Loader2, Link2, Check } from "lucide-react"
 import { IoIosPlayCircle } from "react-icons/io"
@@ -63,19 +64,12 @@ export default function MyLearningPage() {
             key={item.value}
             onClick={() => setTab(item.value)}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+              "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
               tab === item.value && "bg-white text-foreground shadow-sm dark:bg-neutral-800"
             )}
           >
             {t(`site.myLearning.tabs.${item.key}`)}
-            <span
-              className={cn(
-                "rounded-full px-1.5 text-[11px] font-semibold tabular-nums",
-                tab === item.value ? "bg-primary text-primary-foreground" : "bg-neutral-200 text-muted-foreground dark:bg-neutral-800"
-              )}
-            >
-              {counts[item.value]}
-            </span>
+            <CountBadge active={tab === item.value}>{counts[item.value]}</CountBadge>
           </button>
         ))}
       </div>

@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { HiCheckCircle } from "react-icons/hi"
+import { MdWorkspacePremium } from "react-icons/md"
 import { MdGroups } from "react-icons/md"
 import { useTranslation } from "react-i18next"
 import { Search, UserMinus, Loader2 } from "lucide-react"
@@ -88,16 +90,40 @@ export default function StudentsTab() {
                           {(s.displayName ?? "?").split(" ").map((p) => p[0]).slice(0, 2).join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{s.displayName}</span>
+                      <span className="min-w-0 leading-tight">
+                        <span className="block font-medium">{s.displayName}</span>
+                        {s.email && <span className="block text-xs text-muted-foreground">{s.email}</span>}
+                      </span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex min-w-36 items-center gap-2">
-                      <Progress value={s.percentComplete ?? 0} className="h-1.5" />
+                      <Progress value={s.status === "COMPLETED" ? 100 : s.percentComplete ?? 0} className="h-1.5" />
                       <span className="w-20 text-right text-xs tabular-nums text-muted-foreground">
                         {s.completedLessons ?? 0}/{s.totalLessons ?? 0} · {s.percentComplete ?? 0}%
                       </span>
                     </div>
+                    {/* finished the course (maybe before lessons were added) + certificate */}
+                    {(s.status === "COMPLETED" || s.certificateSerial) && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        {s.status === "COMPLETED" && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                            <HiCheckCircle className="size-3.5" /> {t("admin.students.completed")}{s.completedAt ? ` · ${formatDate(s.completedAt)}` : ""}
+                          </span>
+                        )}
+                        {s.certificateSerial && (
+                          <a
+                            href={`/certificates/${s.certificateSerial}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 rounded-full bg-amber-500/12 px-2 py-0.5 text-[11px] font-semibold text-amber-700 hover:underline dark:text-amber-300"
+                            title={s.certificateSerial}
+                          >
+                            <MdWorkspacePremium className="size-3.5" /> {t("admin.students.certificate")}
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">{formatDate(s.enrolledAt)}</td>
                   <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">{formatDate(s.lastAccessedAt) || "—"}</td>

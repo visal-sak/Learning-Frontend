@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { AiExplain, AiHint, useAiHelper } from "@/components/lesson/AiHelper"
 import { MdQuiz, MdLock } from "react-icons/md"
 import { HiCheckCircle } from "react-icons/hi"
 import { BiSolidXCircle } from "react-icons/bi"
@@ -102,6 +103,7 @@ export default function QuizPage() {
       )}
       {stage === "result" && result && (
         <Result
+          quizId={quiz.id}
           result={result}
           canRetry={attemptsLeft == null || attemptsLeft > 1}
           onRetry={async () => {
@@ -207,6 +209,7 @@ function Intro({ quiz, attempts, attemptsLeft, onStart }) {
 }
 
 function Taking({ quiz, onSubmitted }) {
+  const helper = useAiHelper("quizzes", quiz.id) // hints only when the course allows AI in the final quiz
   const [answers, setAnswers] = useState({})
   const { t } = useTranslation()
   const [submitting, setSubmitting] = useState(false)
@@ -315,6 +318,15 @@ function Taking({ quiz, onSubmitted }) {
               <p className="mt-3 text-lg font-semibold leading-snug">{q.text}</p>
 
               <QuestionInput question={q} type={type} value={answers[q.id]} onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))} />
+              <div className="mt-3">
+                <AiHint
+                  scope="quizzes"
+                  id={quiz.id}
+                  questionId={q.id}
+                  helper={helper}
+                  answer={type === "SHORT_ANSWER" ? { text: answers[q.id] ?? "" } : { selectedOptionIds: answers[q.id] == null ? [] : [].concat(answers[q.id]) }}
+                />
+              </div>
             </li>
           )
         })}
@@ -429,7 +441,8 @@ function ScoreRing({ score, passed }) {
   )
 }
 
-function Result({ result, canRetry, onRetry }) {
+function Result({ quizId, result, canRetry, onRetry }) {
+  const helper = useAiHelper("quizzes", quizId)
   const { id: courseId } = useParams()
   const navigate = useNavigate()
   const [retrying, setRetrying] = useState(false)
@@ -544,6 +557,17 @@ function Result({ result, canRetry, onRetry }) {
                       <Lightbulb className="mt-0.5 size-4 shrink-0" /> {q.explanation}
                     </p>
                   )}
+                  <AiExplain
+                    scope="quizzes"
+                    id={quizId}
+                    questionId={q.questionId}
+                    helper={helper}
+                    answer={
+                      q.type === "SHORT_ANSWER"
+                        ? { text: q.textAnswer ?? "" }
+                        : { selectedOptionIds: q.selectedOptionIds ?? (q.selectedOptionId ? [q.selectedOptionId] : []) }
+                    }
+                  />
                 </div>
               </li>
             ))}

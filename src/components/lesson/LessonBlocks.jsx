@@ -83,7 +83,10 @@ function List({ items, ordered }) {
           {ordered ? (
             <span className="mt-px grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold tabular-nums text-primary-foreground">{i + 1}</span>
           ) : (
-            <span className="mt-[9px] size-2 shrink-0 rounded-full bg-primary ring-4 ring-primary/15" />
+            // fixed-width marker slot so the soft halo never spills past the text edge
+            <span className="grid h-[1.625em] w-5 shrink-0 place-items-center" aria-hidden>
+              <span className="size-2 rounded-full bg-primary shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_15%,transparent)]" />
+            </span>
           )}
           <span className="min-w-0"><Inline text={item} /></span>
         </li>

@@ -157,7 +157,7 @@ const CertificateSheet = forwardRef(function CertificateSheet({ cert }, ref) {
     <div
       ref={ref}
       className="relative overflow-hidden bg-white text-[#1f2340]"
-      style={{ width: PAGE_W, height: PAGE_H, fontFamily: "'Geist Variable', 'Noto Sans Khmer Variable', system-ui, sans-serif" }}
+      style={{ width: PAGE_W, height: PAGE_H, fontFamily: "'Inter Digits', 'Geist Variable', 'Noto Sans Khmer Variable', system-ui, sans-serif" }}
     >
       {/* soft background: faint navy dots + corner washes */}
       <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(${NAVY}0d 1px, transparent 1px)`, backgroundSize: "18px 18px" }} />

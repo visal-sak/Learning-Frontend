@@ -23,7 +23,6 @@ import { flattenLessons, formatBytes, formatMinutes, getLessonMedia, lessonAcces
 import { cn } from "@/lib/utils"
 import { toast } from "@/lib/toast"
 import Navbar from "@/components/sections/Navbar"
-import LessonTools from "@/components/course/LessonTools"
 import LessonBlocks from "@/components/lesson/LessonBlocks"
 import LessonCheck from "@/components/lesson/LessonCheck"
 import { useVideoClock } from "@/hooks/useVideoClock"
@@ -345,7 +344,6 @@ function LessonView({ hasFinalQuiz = true, lesson, done, onToggleDone, onSynced,
   const media = isQuiz ? { type: null, text: "" } : getLessonMedia(full)
   const clock = useVideoClock(loading || error ? null : media) // note timestamps: read the video time, jump back to it
   const isAuthed = useAuthStore((s) => !!s.accessToken)
-  const startLogin = useAuthStore((s) => s.startLogin)
 
   // LessonContentResponse carries `completed` — reflect it in the sidebar once loaded
   useEffect(() => {
@@ -475,13 +473,6 @@ function LessonView({ hasFinalQuiz = true, lesson, done, onToggleDone, onSynced,
 
         {/* end-of-lesson quiz (signed-in learners) */}
         {!loading && !error && isAuthed && !isQuiz && <LessonCheck lessonId={lesson.id} />}
-
-        <LessonTools
-          lessonId={lesson.id}
-          clock={clock}
-          isAuthed={isAuthed}
-          onLogin={() => startLogin({ returnTo: location.pathname + location.search })}
-        />
 
         <FormError message={actionError} />
 

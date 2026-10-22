@@ -3,10 +3,21 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/noto-sans-khmer"; /* Khmer letters (Geist has none) */
 
+/* Numbers everywhere use Inter: this face only covers the digits 0–9 (unicode-range),
+   so letters fall through to Geist / Noto Sans Khmer. */
+@font-face {
+  font-family: "Inter Digits";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0030-0039;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Geist Variable", "Noto Sans Khmer Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Digits", "Geist Variable", "Noto Sans Khmer Variable", ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -63,19 +74,19 @@
   --card-foreground: oklch(0.96 0.005 260);
   --popover: oklch(0.2 0.014 265);
   --popover-foreground: oklch(0.96 0.005 260);
-  /* #0D0B61 is too dark to see on the dark background — same hue, lifted */
-  --primary: oklch(0.7 0.13 280);
-  --primary-foreground: #0d0b61;
+  /* Dark mode brand: ocean blue (the light-mode navy #0D0B61 disappears on a dark background) */
+  --primary: oklch(0.72 0.14 232);
+  --primary-foreground: oklch(0.2 0.06 245);
   --secondary: oklch(0.25 0.014 265);
   --secondary-foreground: oklch(0.96 0.005 260);
   --muted: oklch(0.25 0.014 265);
   --muted-foreground: oklch(0.68 0.015 265);
-  --accent: oklch(0.28 0.06 280);
-  --accent-foreground: oklch(0.9 0.06 280);
+  --accent: oklch(0.28 0.06 235);
+  --accent-foreground: oklch(0.9 0.06 232);
   --destructive: oklch(0.7 0.19 22);
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.7 0.13 280);
+  --ring: oklch(0.72 0.14 232);
 
 }
 
@@ -199,7 +210,7 @@
    weight; the * covers the title, description and timestamp. */
 html .gooey-wrapper,
 html .gooey-wrapper * {
-  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Inter Digits", "Geist Variable", "Noto Sans Khmer Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Printing a page (e.g. a certificate): drop the site header and footer */
@@ -231,3 +242,11 @@ html .gooey-wrapper * {
 .dark .code-surface .token.number, .dark .code-surface .token.boolean, .dark .code-surface .token.constant, .dark .code-surface .token.unit { color: #fdba74; }
 .dark .code-surface .token.operator, .dark .code-surface .token.entity, .dark .code-surface .token.url, .dark .code-surface .token.punctuation { color: #94a3b8; }
 .code-surface textarea::placeholder { color: #94a3b8; }
+
+/* Bunny AI: ear wiggle while thinking, typing dots */
+@keyframes bunny-ear-l { 0%, 100% { transform: rotate(0deg) } 50% { transform: rotate(-10deg) } }
+@keyframes bunny-ear-r { 0%, 100% { transform: rotate(0deg) } 50% { transform: rotate(10deg) } }
+@keyframes bunny-dot { 0%, 80%, 100% { transform: translateY(0); opacity: .45 } 40% { transform: translateY(-3px); opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[bunny-"] { animation: none !important; }
+}

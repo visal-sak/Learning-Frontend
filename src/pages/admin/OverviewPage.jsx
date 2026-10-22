@@ -23,10 +23,8 @@ function StatGrid({ children }) {
   return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{children}</div>
 }
 
-function PlatformStats() {
+function PlatformStats({ result: { data: s, error }, reload }) {
   const { t } = useTranslation()
-  const { data: s, loading, error, reload } = useFetch(() => reportService.platform(), [])
-  if (loading) return <LoadingState variant="section" />
   if (error) return <ErrorState error={error} onRetry={reload} className="py-8" />
   const totalCourses = (s.publishedCourses ?? 0) + (s.draftCourses ?? 0) + (s.pendingReview ?? 0)
   return (
@@ -51,10 +49,8 @@ function PlatformStats() {
   )
 }
 
-function TeachingStats() {
+function TeachingStats({ result: { data: s, error }, reload }) {
   const { t } = useTranslation()
-  const { data: s, loading, error, reload } = useFetch(() => reportService.myTeaching(), [])
-  if (loading) return <LoadingState variant="section" />
   if (error) return <ErrorState error={error} onRetry={reload} className="py-8" />
   return (
     <StatGrid>
@@ -107,18 +103,15 @@ const categoryColumn = (t) => ({
   render: (c) => (c.categoryName ? <Tag className={categoryTag(c.categoryName)}>{c.categoryName}</Tag> : null),
 })
 
-function TopTable({ title, description, load, columns }) {
+function TopTable({ title, description, result: { data, error }, reload, columns }) {
   const { t } = useTranslation()
-  const { data, loading, error, reload } = useFetch(load, [])
   return (
     <section className="space-y-3">
       <div>
         <h2 className="text-base font-bold tracking-tight">{title}</h2>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      {loading ? (
-        <LoadingState variant="section" />
-      ) : error ? (
+      {error ? (
         <ErrorState error={error} onRetry={reload} className="py-6" />
       ) : !data?.length ? (
         <EmptyState icon={MdBarChart} title={t("admin.overview.noData")} className="py-8" />
@@ -133,6 +126,23 @@ export default function OverviewPage() {
   const { t } = useTranslation()
   const { isAdmin, isInstructor } = useRoles()
   const display = useAuthStore(useShallow(selectDisplayUser))
+  const showPlatform = isAdmin
+  const showTeaching = isInstructor || !isAdmin
+
+  // Everything on the page loads together behind one loader; a failed part shows its own error
+  const settle = (promise) => promise.then((data) => ({ data }), (error) => ({ error }))
+  const { data, loading, reload } = useFetch(
+    () =>
+      Promise.all([
+        showPlatform ? settle(reportService.platform()) : { data: null },
+        showTeaching ? settle(reportService.myTeaching()) : { data: null },
+        settle(reportService.topCourses(5)),
+        settle(reportService.topRated(5)),
+      ]),
+    [showPlatform, showTeaching]
+  )
+  if (loading || !data) return <LoadingState />
+  const [platform, teaching, topCourses, topRated] = data
 
   return (
     <div className="space-y-10">
@@ -140,23 +150,24 @@ export default function OverviewPage() {
         <Button variant="outline" asChild><Link to="/admin/courses"><PenSquare /> {t("admin.overview.manageCourses")}</Link></Button>
       </PageHeader>
 
-      {isAdmin && (
+      {showPlatform && (
         <section className="space-y-3">
           <h2 className="text-base font-bold tracking-tight">{t("admin.overview.platformTitle")}</h2>
-          <PlatformStats />
+          <PlatformStats result={platform} reload={reload} />
         </section>
       )}
-      {(isInstructor || !isAdmin) && (
+      {showTeaching && (
         <section className="space-y-3">
           <h2 className="text-base font-bold tracking-tight">{t("admin.overview.teachingTitle")}</h2>
-          <TeachingStats />
+          <TeachingStats result={teaching} reload={reload} />
         </section>
       )}
 
       <TopTable
         title={t("admin.overview.popular.title")}
         description={t("admin.overview.popular.description")}
-        load={() => reportService.topCourses(5)}
+        result={topCourses}
+        reload={reload}
         columns={[
           courseColumn(t),
           instructorColumn(t),
@@ -177,7 +188,8 @@ export default function OverviewPage() {
       <TopTable
         title={t("admin.overview.topRated.title")}
         description={t("admin.overview.topRated.description")}
-        load={() => reportService.topRated(5)}
+        result={topRated}
+        reload={reload}
         columns={[
           courseColumn(t),
           instructorColumn(t),
